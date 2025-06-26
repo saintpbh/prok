@@ -667,7 +667,7 @@ body.mobile-mode #sidebar-overlay {
 /* 모바일 첫화면(랜딩) 스타일 */
 .mobile-landing {
   min-height: 100vh;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 50%, #667eea 100%);
+  background: linear-gradient(90deg, #67c6ff 0%, #764ba2 100%) !important;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -716,29 +716,24 @@ body.mobile-mode #sidebar-overlay {
 
 .mobile-landing-topbar-content {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.8rem;
-  max-width: 400px;
   justify-content: center;
+  width: 100%;
+  transform: scale(0.9);
 }
 
 .mobile-landing-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  background: white;
-  object-fit: contain;
-  flex-shrink: 0;
+  width: 54px !important;
+  height: 54px !important;
+  margin-bottom: 0.3em;
 }
 
 .mobile-landing-title {
-  font-size: 1.65rem;
-  font-weight: 700;
-  color: #ffffff;
-  line-height: 1.3;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.3);
-  white-space: nowrap;
+  font-size: 1.25em !important;
+  font-weight: bold;
+  text-align: center;
+  letter-spacing: -0.5px;
 }
 
 .mobile-landing-intro {

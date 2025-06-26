@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>presence/prayerCount 테스트</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    body { font-family: Pretendard, Arial, sans-serif; background: #f5f6fa; padding: 2rem; }
+    .box { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 1.5rem; margin-bottom: 1.5rem; max-width: 400px; }
+    .label { font-weight: bold; color: #333; }
+    .value { font-size: 1.5em; color: #4caf50; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="label">실시간 접속자 수 (presence): <span id="presence-count">-</span></div>
+  </div>
+  <div class="box">
+    <div class="label">prayerCount 값: <span id="prayer-count">-</span></div>
+  </div>
+  <div class="box">
+    <div class="label">콘솔 로그:</div>
+    <pre id="log" style="font-size:0.95em; color:#555; background:#f7f7fa; padding:0.7em; border-radius:8px; max-height:200px; overflow:auto;"></pre>
+  </div>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCrJIhyTYQ4bTUW4jarFqluD97xKao2kF0",
+      authDomain: "prokworldmap.firebaseapp.com",
+      databaseURL: "https://prokworldmap-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "prokworldmap",
+      storageBucket: "prokworldmap.appspot.com",
+      messagingSenderId: "728381830842",
+      appId: "1:728381830842:web:cfcb810657e1608d91f483",
+      measurementId: "G-SVTPDV602Y"
+    };
+    if (window.firebase && window.firebase.initializeApp) {
+      if (!window.firebase.apps.length) window.firebase.initializeApp(firebaseConfig);
+    }
+    const db = window.firebase.database();
+    const presenceRef = db.ref('presence');
+    const prayerCountRef = db.ref('prayerCount');
+    const presenceCountSpan = document.getElementById('presence-count');
+    const prayerCountSpan = document.getElementById('prayer-count');
+    const logDiv = document.getElementById('log');
+    function log(msg) {
+      logDiv.textContent += msg + '\n';
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(msg);
+    }
+    // presence 관리 (고유 키)
+    const myKey = db.ref().push().key;
+    const myRef = presenceRef.child(myKey);
+    myRef.set(true);
+    myRef.onDisconnect().remove();
+    // presence 실시간 카운트 및 prayerCount 동기화
+    presenceRef.on('value', snap => {
+      const count = snap.numChildren();
+      presenceCountSpan.textContent = count;
+      prayerCountRef.set(count)
+        .then(() => log('prayerCount 동기화 성공: ' + count))
+        .catch(e => log('prayerCount 동기화 실패: ' + e));
+    });
+    // prayerCount 값 실시간 표시
+    prayerCountRef.on('value', snap => {
+      prayerCountSpan.textContent = snap.val();
+    });
+  </script>
+</body>
+</html> 
