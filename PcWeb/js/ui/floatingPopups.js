@@ -1,25 +1,42 @@
 // 플로팅 리스트 팝업 생성
 function createFloatingListPopup({ flagUrl, country, missionaryList }) {
     const wrapper = document.createElement('div');
-    wrapper.className = 'floating-popup floating-list-popup';
+    wrapper.className = 'country-missionary-popup'; // 새로운 메인 클래스
     wrapper.innerHTML = `
-        <div class="popup-header">
-            <img src="${flagUrl}" alt="국기" class="popup-flag">
-            <span class="popup-country">${country}</span>
+        <button class="close-btn">×</button> <!-- 닫기 버튼 추가 -->
+        <div class="country-header">
+            <img src="${flagUrl}" alt="국기" class="country-flag">
+            <span class="country-name">${country}</span>
         </div>
-        <ul class="popup-missionary-list">
-            ${missionaryList.map(missionary => `<li class="missionary-item-clickable"><span class="missionary-name">${missionary.name}</span> <span class="popup-city">(${missionary.city})</span></li>`).join('')}
+        <ul class="missionary-list">
+            ${missionaryList.map(missionary => `
+                <li class="missionary-list-item">
+                    <span class="missionary-name">${missionary.name}</span>
+                    <span class="missionary-city">(${missionary.city})</span>
+                </li>
+            `).join('')}
         </ul>
     `;
     
-    // 선교사 리스트 항목 클릭 이벤트 추가 (이름과 도시 모두 포함)
-    const listItems = wrapper.querySelectorAll('.missionary-item-clickable');
+    // 선교사 리스트 항목 클릭 이벤트 추가
+    const listItems = wrapper.querySelectorAll('.missionary-list-item');
     listItems.forEach((listItem, index) => {
         listItem.addEventListener('click', () => {
             const missionary = missionaryList[index];
             showMissionaryDetail(missionary.name);
         });
     });
+
+    // 닫기 버튼 클릭 이벤트 추가
+    const closeButton = wrapper.querySelector('.close-btn');
+    if (closeButton) {
+        closeButton.addEventListener('click', () => {
+            wrapper.classList.add('closing'); // 닫기 애니메이션 클래스 추가
+            setTimeout(() => {
+                wrapper.remove(); // 애니메이션 후 제거
+            }, 300); // CSS 애니메이션 시간과 일치
+        });
+    }
     
     return wrapper;
 }
@@ -48,6 +65,7 @@ function closeFloatingPopup() {
 
 // 선교사 상세정보 표시
 function showMissionaryDetail(missionaryName) {
+    console.log('showMissionaryDetail 호출됨:', missionaryName);
     // 기존 플로팅 팝업 닫기
     closeFloatingPopup();
     

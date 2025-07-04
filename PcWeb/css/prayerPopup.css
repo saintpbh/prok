@@ -495,4 +495,192 @@
 .popup-close-btn:focus {
     outline: 2px solid #3b82f6;
     outline-offset: 2px;
-} 
+}
+
+/* ==========================================================================
+   기도손 애니메이션 (실시간 공유 애니메이션) - minimal-prayer-popup.css에서 이동
+   ========================================================================== */
+
+.prayer-hand-animation {
+    position: absolute;
+    z-index: 10000;
+    font-size: 24px;
+    pointer-events: none;
+    user-select: none;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+}
+
+/* 기도손 애니메이션 키프레임 */
+@keyframes prayer-hand-rise {
+    0% {
+        transform: translateY(0px) scale(0.8);
+        opacity: 0;
+    }
+    10% {
+        transform: translateY(-10px) scale(1);
+        opacity: 1;
+    }
+    90% {
+        transform: translateY(-80px) scale(0.6);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translateY(-100px) scale(0.4);
+        opacity: 0;
+    }
+}
+
+/* 기도손 펄스 효과 */
+@keyframes prayer-hand-pulse {
+    0%, 100% {
+        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));
+    }
+    50% {
+        filter: drop-shadow(0 0 16px rgba(59, 130, 246, 0.9));
+    }
+}
+
+/* 애니메이션 클래스 적용 */
+.prayer-hand-animation.animated {
+    animation: prayer-hand-rise 3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+               prayer-hand-pulse 1s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   기도 안내 팝업 (타이틀바 아래) - minimal-prayer-popup.css에서 이동
+   ========================================================================== */
+
+.prayer-notification {
+    position: fixed;
+    top: 60px; /* 타이틀바 아래 위치 */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.prayer-notification.hidden {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+    visibility: hidden;
+}
+
+.prayer-notification.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    visibility: visible;
+}
+
+.prayer-notification-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px 24px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.prayer-notification .prayer-icon {
+    font-size: 20px;
+    animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+.prayer-notification .prayer-message {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+}
+
+/* 부드러운 펄스 애니메이션 */
+@keyframes gentle-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.9;
+    }
+}
+
+/* 슬라이드 인 애니메이션 */
+@keyframes slide-in-down {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* 슬라이드 아웃 애니메이션 */
+@keyframes slide-out-up {
+    from {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+    .prayer-notification-content {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        border-color: #475569;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    }
+    
+    .prayer-notification .prayer-message {
+        color: #f1f5f9;
+    }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .prayer-notification {
+        top: 50px;
+        left: 20px;
+        right: 20px;
+        transform: none;
+    }
+    
+    .prayer-notification.hidden {
+        transform: translateY(-20px);
+    }
+    
+    .prayer-notification.show {
+        transform: translateY(0);
+    }
+    
+    .prayer-notification-content {
+        padding: 14px 20px;
+    }
+    
+    .prayer-notification .prayer-message {
+        font-size: 14px;
+    }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+    .prayer-notification {
+        transition: none;
+    }
+    
+    .prayer-notification .prayer-icon {
+        animation: none;
+    }
+}
