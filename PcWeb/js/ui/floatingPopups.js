@@ -21,11 +21,17 @@ function createFloatingListPopup({ flagUrl, country, missionaryList }) {
     // 선교사 리스트 항목 클릭 이벤트 추가
     const listItems = wrapper.querySelectorAll('.missionary-list-item');
     listItems.forEach((listItem, index) => {
-        listItem.addEventListener('click', () => {
+        listItem.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             const missionary = missionaryList[index];
             console.log('선교사 이름 클릭됨:', missionary.name);
             showMissionaryDetail(missionary.name);
         });
+        
+        // 호버 효과를 위한 추가 스타일
+        listItem.style.cursor = 'pointer';
+        listItem.style.transition = 'background-color 0.2s ease';
     });
 
     // 닫기 버튼 클릭 이벤트 추가
@@ -102,8 +108,12 @@ function showMissionaryDetail(missionaryName) {
         if (window.UIManager && window.UIManager.showDetailPopup) {
             const latlng = window.MissionaryMap?.getLatLng?.(missionaryInfo, missionaryInfo.country) || [0, 0];
             window.UIManager.showDetailPopup(missionaryInfo.name, latlng);
+        } else if (window.MissionaryMap && window.MissionaryMap.showDetailPopup) {
+            // UIManager가 없으면 MissionaryMap의 showDetailPopup 사용
+            const latlng = window.MissionaryMap.getLatLng(missionaryInfo, missionaryInfo.country);
+            window.MissionaryMap.showDetailPopup(missionaryInfo.name, latlng);
         } else {
-            console.error('UIManager.showDetailPopup 함수를 찾을 수 없습니다.');
+            console.error('UIManager.showDetailPopup 또는 MissionaryMap.showDetailPopup 함수를 찾을 수 없습니다.');
         }
     } else {
         console.error(`선교사 정보를 찾을 수 없습니다: ${missionaryName}`);
