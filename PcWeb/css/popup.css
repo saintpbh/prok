@@ -2,7 +2,7 @@
 
 #detailPopup {
     position: fixed;
-    z-index: 10000;
+    z-index: 1000004 !important; /* mobile-detail.css보다 높게 설정 */
     display: none;
     max-width: 400px;
     min-width: 320px;
