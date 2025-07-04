@@ -107,16 +107,21 @@ function showMissionaryDetail(missionaryName) {
         // 사이드바와 동일한 방식으로 UIManager의 showDetailPopup 사용
         if (window.UIManager && window.UIManager.showDetailPopup) {
             const latlng = window.MissionaryMap?.getLatLng?.(missionaryInfo, missionaryInfo.country) || [0, 0];
+            console.log('UIManager.showDetailPopup 호출:', missionaryInfo.name, latlng);
             window.UIManager.showDetailPopup(missionaryInfo.name, latlng);
         } else if (window.MissionaryMap && window.MissionaryMap.showDetailPopup) {
             // UIManager가 없으면 MissionaryMap의 showDetailPopup 사용
             const latlng = window.MissionaryMap.getLatLng(missionaryInfo, missionaryInfo.country);
+            console.log('MissionaryMap.showDetailPopup 호출:', missionaryInfo.name, latlng);
             window.MissionaryMap.showDetailPopup(missionaryInfo.name, latlng);
         } else {
+            // 강제 fallback: 간단한 alert로 상세 정보 표시
             console.error('UIManager.showDetailPopup 또는 MissionaryMap.showDetailPopup 함수를 찾을 수 없습니다.');
+            alert(`선교사 상세 정보\n\n이름: ${missionaryInfo.name}\n국가: ${missionaryInfo.country}\n도시: ${missionaryInfo.city || '정보없음'}\n기관: ${missionaryInfo.organization || '정보없음'}\n기도제목: ${missionaryInfo.prayerTopic || '기도제목이 없습니다.'}`);
         }
     } else {
         console.error(`선교사 정보를 찾을 수 없습니다: ${missionaryName}`);
+        alert(`선교사 정보를 찾을 수 없습니다: ${missionaryName}`);
     }
 }
 

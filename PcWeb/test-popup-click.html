@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>팝업 클릭 테스트</title>
+    <style>
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .test-header h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .test-header p {
+            color: #718096;
+            font-size: 16px;
+        }
+
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f7fafc;
+        }
+
+        .test-section h2 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .test-button.secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .test-button.secondary:hover {
+            box-shadow: 0 8px 25px rgba(240, 147, 251, 0.4);
+        }
+
+        .test-area {
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 200px;
+            background: white;
+            position: relative;
+        }
+
+        .test-area h3 {
+            margin-top: 0;
+            color: #4a5568;
+        }
+
+        .mock-marker {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            cursor: pointer;
+            margin: 10px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .mock-marker:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .mock-marker::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .status-log {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .status-log .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+
+        .status-log .log-entry.success {
+            color: #68d391;
+        }
+
+        .status-log .log-entry.error {
+            color: #fc8181;
+        }
+
+        .status-log .log-entry.info {
+            color: #63b3ed;
+        }
+
+        /* 팝업 스타일 */
+        .country-missionary-popup {
+            position: absolute;
+            z-index: 1000;
+            width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            animation: country-popup-fade-in 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes country-popup-fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(15px) scale(0.98);
+                filter: blur(3px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+
+        .country-missionary-popup .country-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .country-missionary-popup .country-flag {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .country-missionary-popup .country-name {
+            font-size: 19px;
+            font-weight: 600;
+            color: #1f2937;
+            line-height: 1.3;
+        }
+
+        .country-missionary-popup .missionary-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .country-missionary-popup .missionary-list-item {
+            display: flex;
+            flex-direction: column;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .country-missionary-popup .missionary-list-item:last-child {
+            border-bottom: none;
+        }
+
+        .country-missionary-popup .missionary-list-item:hover {
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 4px;
+        }
+
+        .country-missionary-popup .missionary-name {
+            font-weight: 500;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        .country-missionary-popup .missionary-city {
+            color: #6b7280;
+            font-weight: 400;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        .country-missionary-popup .close-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: none;
+            border: none;
+            font-size: 22px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .country-missionary-popup .close-btn:hover {
+            color: #374151;
+        }
+
+        /* 상세 팝업 스타일 */
+        .detail-popup-modern {
+            position: absolute;
+            z-index: 1001;
+            width: 350px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: detail-popup-fade-in 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes detail-popup-fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .detail-popup-modern .close-btn-modern {
+            position: absolute;
+            top: 12px;
+            right: 16px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .detail-popup-modern .close-btn-modern:hover {
+            color: #374151;
+        }
+
+        .detail-popup-modern .popup-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 20px 20px 15px 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .detail-popup-modern .missionary-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .detail-popup-modern .missionary-info {
+            flex: 1;
+        }
+
+        .detail-popup-modern .missionary-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .detail-popup-modern .missionary-location {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .detail-popup-modern .prayer-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .detail-popup-modern .prayer-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
+        }
+
+        .detail-popup-modern .popup-body {
+            padding: 20px;
+        }
+
+        .detail-popup-modern .info-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-popup-modern .info-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .detail-popup-modern .info-icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .detail-popup-modern .info-content {
+            flex: 1;
+        }
+
+        .detail-popup-modern .info-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+
+        .detail-popup-modern .info-value {
+            font-size: 14px;
+            color: #374151;
+            font-weight: 500;
+        }
+
+        .detail-popup-modern .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        .detail-popup-modern .prayer-content {
+            color: #4a5568;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="test-header">
+            <h1>🎯 팝업 클릭 테스트</h1>
+            <p>마커 클릭 → 선교사 리스트 → 이름 클릭 → 상세 팝업 기능을 테스트합니다</p>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 테스트 시나리오</h2>
+            <p>1. 아래 마커를 클릭하여 국가별 선교사 리스트 팝업을 띄웁니다</p>
+            <p>2. 리스트에서 선교사 이름을 클릭하여 상세 정보 팝업을 확인합니다</p>
+            <p>3. 각 단계별로 콘솔 로그와 상태 로그를 확인합니다</p>
+        </div>
+
+        <div class="test-section">
+            <h2>🗺️ 테스트 마커</h2>
+            <div class="test-area">
+                <h3>국가별 마커 (클릭하여 테스트)</h3>
+                <div class="mock-marker" data-country="일본" data-flag="jp"></div>
+                <div class="mock-marker" data-country="중국" data-flag="cn"></div>
+                <div class="mock-marker" data-country="태국" data-flag="th"></div>
+                <div class="mock-marker" data-country="인도" data-flag="in"></div>
+                <div class="mock-marker" data-country="네팔" data-flag="np"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔧 수동 테스트</h2>
+            <button class="test-button" onclick="testCreateFloatingListPopup()">선교사 리스트 팝업 생성</button>
+            <button class="test-button secondary" onclick="testShowMissionaryDetail()">상세 팝업 직접 호출</button>
+            <button class="test-button" onclick="clearAllPopups()">모든 팝업 제거</button>
+            <button class="test-button secondary" onclick="clearLog()">로그 초기화</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 상태 로그</h2>
+            <div id="statusLog" class="status-log">
+                <div class="log-entry info">테스트 페이지가 로드되었습니다. 마커를 클릭하여 테스트를 시작하세요.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 테스트용 선교사 데이터
+        const testMissionaries = {
+            '일본': [
+                { name: '김선교', city: '도쿄' },
+                { name: '이선교', city: '오사카' },
+                { name: '박선교', city: '후쿠오카' }
+            ],
+            '중국': [
+                { name: '최선교', city: '베이징' },
+                { name: '정선교', city: '상하이' },
+                { name: '강선교', city: '광저우' }
+            ],
+            '태국': [
+                { name: '윤선교', city: '방콕' },
+                { name: '한선교', city: '치앙마이' }
+            ],
+            '인도': [
+                { name: '조선교', city: '뉴델리' },
+                { name: '임선교', city: '뭄바이' },
+                { name: '오선교', city: '방갈로르' }
+            ],
+            '네팔': [
+                { name: '유선교', city: '카트만두' },
+                { name: '전선교', city: '포카라' }
+            ]
+        };
+
+        // 로그 함수
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('statusLog');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function clearLog() {
+            document.getElementById('statusLog').innerHTML = '<div class="log-entry info">로그가 초기화되었습니다.</div>';
+        }
+
+        // 팝업 제거 함수
+        function clearAllPopups() {
+            document.querySelectorAll('.country-missionary-popup, .detail-popup-modern').forEach(popup => popup.remove());
+            addLog('모든 팝업이 제거되었습니다.', 'info');
+        }
+
+        // 선교사 리스트 팝업 생성 함수 (floatingPopups.js의 createFloatingListPopup 복사)
+        function createFloatingListPopup({ flagUrl, country, missionaryList }) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'country-missionary-popup';
+            wrapper.innerHTML = `
+                <button class="close-btn">×</button>
+                <div class="country-header">
+                    <img src="${flagUrl}" alt="국기" class="country-flag">
+                    <span class="country-name">${country}</span>
+                </div>
+                <ul class="missionary-list">
+                    ${missionaryList.map(missionary => `
+                        <li class="missionary-list-item">
+                            <span class="missionary-name">${missionary.name}</span>
+                            <span class="missionary-city">(${missionary.city})</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+            
+            // 선교사 리스트 항목 클릭 이벤트 추가
+            const listItems = wrapper.querySelectorAll('.missionary-list-item');
+            listItems.forEach((listItem, index) => {
+                listItem.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const missionary = missionaryList[index];
+                    addLog(`선교사 이름 클릭됨: ${missionary.name}`, 'success');
+                    showMissionaryDetail(missionary.name);
+                });
+                
+                // 호버 효과를 위한 추가 스타일
+                listItem.style.cursor = 'pointer';
+                listItem.style.transition = 'background-color 0.2s ease';
+            });
+
+            // 닫기 버튼 클릭 이벤트 추가
+            const closeButton = wrapper.querySelector('.close-btn');
+            if (closeButton) {
+                closeButton.addEventListener('click', () => {
+                    wrapper.classList.add('closing');
+                    setTimeout(() => {
+                        wrapper.remove();
+                    }, 300);
+                    addLog('선교사 리스트 팝업이 닫혔습니다.', 'info');
+                });
+            }
+            
+            return wrapper;
+        }
+
+        // 선교사 상세정보 표시 함수 (floatingPopups.js의 showMissionaryDetail 복사)
+        function showMissionaryDetail(missionaryName) {
+            addLog(`showMissionaryDetail 호출됨: ${missionaryName}`, 'info');
+            
+            // 기존 팝업들 닫기
+            document.querySelectorAll('.country-missionary-popup, .detail-popup-modern').forEach(popup => {
+                popup.classList.add('closing');
+                setTimeout(() => popup.remove(), 300);
+            });
+            
+            // 상세 팝업 생성
+            const detailPopup = createDetailPopup(missionaryName);
+            document.body.appendChild(detailPopup);
+            
+            // 팝업 위치 설정 (화면 중앙)
+            const rect = detailPopup.getBoundingClientRect();
+            detailPopup.style.left = `${(window.innerWidth - rect.width) / 2}px`;
+            detailPopup.style.top = `${(window.innerHeight - rect.height) / 2}px`;
+            
+            addLog(`상세 팝업이 표시되었습니다: ${missionaryName}`, 'success');
+        }
+
+        // 상세 팝업 생성 함수
+        function createDetailPopup(missionaryName) {
+            const popup = document.createElement('div');
+            popup.className = 'detail-popup-modern';
+            popup.innerHTML = `
+                <button class="close-btn-modern">✕</button>
+                
+                <div class="popup-header">
+                    <div class="missionary-avatar">
+                        ${missionaryName.charAt(0)}
+                    </div>
+                    <div class="missionary-info">
+                        <h2 class="missionary-name">${missionaryName}</h2>
+                        <p class="missionary-location">📍 선교지</p>
+                    </div>
+                    <button class="prayer-btn" data-name="${missionaryName}">
+                        <span class="prayer-emoji">🙏</span>
+                    </button>
+                </div>
+
+                <div class="popup-body">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-icon">📅</span>
+                            <div class="info-content">
+                                <div class="info-label">파송년도</div>
+                                <div class="info-value">2024년</div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <span class="info-icon">🏢</span>
+                            <div class="info-content">
+                                <div class="info-label">소속기관</div>
+                                <div class="info-value">기장선교부</div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <span class="info-icon">⛪</span>
+                            <div class="info-content">
+                                <div class="info-label">노회</div>
+                                <div class="info-value">서울노회</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="prayer-section">
+                        <h3 class="section-title">🙏 기도제목</h3>
+                        <p class="prayer-content">현지 정착과 건강을 위해 기도해주세요. 현지 교회와의 협력과 사역이 잘 이루어지도록 기도해주세요.</p>
+                    </div>
+                </div>
+            `;
+
+            // 닫기 버튼 이벤트
+            const closeBtn = popup.querySelector('.close-btn-modern');
+            closeBtn.addEventListener('click', () => {
+                popup.remove();
+                addLog('상세 팝업이 닫혔습니다.', 'info');
+            });
+
+            // 기도 버튼 이벤트
+            const prayerBtn = popup.querySelector('.prayer-btn');
+            prayerBtn.addEventListener('click', () => {
+                addLog(`기도 버튼 클릭됨: ${missionaryName}`, 'success');
+            });
+
+            return popup;
+        }
+
+        // 마커 클릭 이벤트
+        document.querySelectorAll('.mock-marker').forEach(marker => {
+            marker.addEventListener('click', (e) => {
+                const country = e.target.dataset.country;
+                const flagCode = e.target.dataset.flag;
+                const flagUrl = `https://flagcdn.com/w40/${flagCode}.png`;
+                const missionaryList = testMissionaries[country] || [];
+                
+                addLog(`마커 클릭됨: ${country}`, 'info');
+                
+                // 기존 팝업 제거
+                clearAllPopups();
+                
+                // 새로운 팝업 생성
+                const popup = createFloatingListPopup({
+                    flagUrl: flagUrl,
+                    country: country,
+                    missionaryList: missionaryList
+                });
+                
+                // 팝업 위치 설정 (마커 근처)
+                const rect = e.target.getBoundingClientRect();
+                popup.style.position = 'absolute';
+                popup.style.left = `${rect.left + rect.width + 10}px`;
+                popup.style.top = `${rect.top - 100}px`;
+                popup.style.zIndex = '1000';
+                
+                document.body.appendChild(popup);
+                addLog(`${country} 선교사 리스트 팝업이 생성되었습니다.`, 'success');
+            });
+        });
+
+        // 수동 테스트 함수들
+        function testCreateFloatingListPopup() {
+            const popup = createFloatingListPopup({
+                flagUrl: 'https://flagcdn.com/w40/jp.png',
+                country: '일본',
+                missionaryList: testMissionaries['일본']
+            });
+            
+            popup.style.position = 'absolute';
+            popup.style.left = '50px';
+            popup.style.top = '50px';
+            popup.style.zIndex = '1000';
+            
+            document.body.appendChild(popup);
+            addLog('수동으로 선교사 리스트 팝업을 생성했습니다.', 'info');
+        }
+
+        function testShowMissionaryDetail() {
+            showMissionaryDetail('테스트 선교사');
+        }
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            addLog('테스트 페이지가 로드되었습니다.', 'info');
+            addLog('마커를 클릭하여 테스트를 시작하세요.', 'info');
+        });
+    </script>
+</body>
+</html> 

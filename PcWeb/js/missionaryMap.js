@@ -946,6 +946,35 @@ window.MissionaryMap = class MissionaryMap {
         }
     }
 
+    // 상세 팝업 표시 함수 (UIManager가 없을 때 fallback)
+    showDetailPopup(missionaryName, latlng) {
+        console.log('MissionaryMap.showDetailPopup 호출:', missionaryName, latlng);
+        
+        // 선교사 정보 찾기
+        const missionary = this.state.missionaries.find(m => 
+            m.name && m.name.trim() === missionaryName.trim()
+        );
+        
+        if (!missionary) {
+            console.error(`선교사 정보를 찾을 수 없습니다: ${missionaryName}`);
+            alert(`선교사 정보를 찾을 수 없습니다: ${missionaryName}`);
+            return;
+        }
+        
+        // UIManager가 있으면 UIManager 사용
+        if (window.UIManager && window.UIManager.showDetailPopup) {
+            window.UIManager.showDetailPopup(missionaryName, latlng);
+            return;
+        }
+        
+        // UIManager가 없으면 간단한 alert로 표시
+        const city = missionary.city && missionary.city.trim() ? missionary.city.trim() : '';
+        const location = city ? `${missionary.country} · ${city}` : missionary.country;
+        const prayerTopic = missionary.prayerTopic || missionary.summary || '기도제목이 없습니다.';
+        
+        alert(`선교사 상세 정보\n\n이름: ${missionary.name}\n위치: ${location}\n기관: ${missionary.organization || '정보없음'}\n파송년도: ${missionary.dispatchDate || '정보없음'}\n최근 업데이트: ${missionary.lastUpdate || '정보없음'}\n\n기도제목:\n${prayerTopic}`);
+    }
+
     initPrayerCount() {
         // Firebase가 로드된 후 중보기도자 수 기능 초기화
         const initPrayerCountWithRetry = () => {
