@@ -1,0 +1,30 @@
+/* detailPopup 페이드인 애니메이션 */
+@keyframes detailPopupFadeIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+#detailPopup.animate-in {
+    animation: detailPopupFadeIn 0.3s ease-out forwards;
+}
+
+#detailPopup.animate-out {
+    animation: detailPopupFadeOut 0.3s ease-in forwards;
+}
+
+@keyframes detailPopupFadeOut {
+    0% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+}

@@ -1,0 +1,19 @@
+{
+  "projects": {},
+  "targets": {
+    "prokworldmap": {
+      "hosting": {
+        "pcweb": [
+          "PcWeb"
+        ],
+        "admin": [
+          "Admin"
+        ],
+        "mobile": [
+          "Mobile"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

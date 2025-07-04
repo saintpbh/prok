@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>선교사 관리</title>
+    <link rel="stylesheet" href="css/common/base.css">
+    <link rel="stylesheet" href="css/common/navigation.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/missionary-management.css">
+    <style>
+        /* 로그인이 확인되기 전까지 페이지 내용을 숨깁니다. */
+        body { display: none; }
+        
+        .count-badge {
+            background: #007bff;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .checkbox-label input[type="checkbox"] {
+            margin: 0;
+        }
+        
+        .search-section {
+            display: flex;
+            align-items: center;
+        }
+        
+        .loading-placeholder {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body data-page="missionary-management">
+    <div id="nav-container"></div>
+
+    <main class="admin-main">
+        <h1>👥 선교사 관리 <span class="count-badge" id="missionaryCount">0</span></h1>
+        <!-- 요약/안내 박스 -->
+        <div class="summary-box">
+          <button class="btn btn-primary" id="btn-all-email">전체이메일</button>
+          <button class="btn btn-primary" id="btn-inactive-email">뜸한분메일</button>
+          <button class="btn btn-primary" id="btn-export-local-info">현지정보출력</button>
+          <button class="btn btn-secondary" id="btn-certificate-send">파송증명서</button>
+          <button class="btn btn-secondary" id="btn-certificate-employ">재직증명서</button>
+          <button class="btn btn-secondary" id="btn-certificate-career">경력증명서</button>
+        </div>
+        <div class="action-bar">
+            <div class="search-section">
+                <input type="text" id="missionarySearch" placeholder="이름 또는 국가로 검색..." class="search-input">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="includeArchived">
+                    아카이브 포함
+                </label>
+            </div>
+            <div class="action-buttons">
+                <button type="button" class="btn btn-primary" id="addMissionaryBtn">
+                    ➕ 선교사 추가
+                </button>
+            </div>
+        </div>
+
+        <div class="missionary-list-container">
+            <div id="missionaryList" class="missionary-list">
+                <!-- 기존 missionaryList 내용은 missionaryManagement.js에서 동적으로 생성됩니다. -->
+                <div class="loading-placeholder">
+                    <div class="loading-spinner"></div>
+                    <p>선교사 목록을 불러오는 중...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 로그인 모달 -->
+    <div id="loginModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔐 관리자 로그인</h2>
+                <button type="button" class="close-btn" onclick="closeLoginModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="event.preventDefault(); performLogin();">
+                    <div class="form-group">
+                        <label for="loginEmail">이메일:</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">비밀번호:</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <div id="loginStatus" class="login-status"></div>
+                    <button type="submit" class="btn btn-primary">로그인</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 선교사 상세보기 모달 -->
+    <div id="missionaryDetailModal" class="modal" style="display: none;">
+      <div class="modal-content large-modal">
+        <div class="modal-header">
+          <h2>👤 선교사 상세정보</h2>
+          <button type="button" class="close-btn" onclick="closeMissionaryDetailModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="missionaryDetailContent">
+          <!-- 상세정보가 여기에 동적으로 로드됩니다 -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" id="editMissionaryBtn">✏️ 수정</button>
+          <button type="button" class="btn btn-secondary" onclick="closeMissionaryDetailModal()">닫기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 선교사 수정 모달 -->
+    <div id="editMissionaryModal" class="modal" style="display: none;">
+      <div class="modal-content large-modal">
+        <div class="modal-header">
+          <h2>✏️ 선교사 수정</h2>
+          <button type="button" class="close-btn" onclick="closeEditMissionaryModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="editMissionaryContent">
+          <!-- 수정 폼이 여기에 동적으로 로드됩니다 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 전체이메일 모달 -->
+    <div id="modal-all-email" class="modal" style="display:none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>전체 이메일 발송</h2>
+          <button type="button" class="close-btn" onclick="closeModal('modal-all-email')">&times;</button>
+        </div>
+        <div class="modal-body" id="modal-all-email-body">
+          <div class="form-group">
+            <label><b>이메일 리스트 (자동 추출 + 수동 추가)</b></label>
+            <textarea id="all-email-list" rows="4" class="form-control"></textarea>
+            <div style="margin-top:6px;">
+              <input type="email" id="manual-email-input" placeholder="이메일 추가" class="form-control" style="width:60%;display:inline-block;">
+              <button type="button" id="add-manual-email" class="btn btn-secondary" style="margin-left:6px;">+ 추가</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label><b>제목</b></label>
+            <input type="text" id="all-email-subject" class="form-control">
+          </div>
+          <div class="form-group">
+            <label><b>본문</b></label>
+            <textarea id="all-email-body" rows="6" class="form-control"></textarea>
+          </div>
+          <div style="margin-bottom:10px;">
+            <button type="button" id="copy-all-email-list" class="btn btn-secondary">이메일 복사</button>
+            <button type="button" id="download-all-email-list" class="btn btn-secondary">TXT로 저장</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 뜸한분메일 모달 -->
+    <div id="modal-inactive-email" class="modal" style="display:none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>뜸한분 이메일 발송</h2>
+          <button type="button" class="close-btn" onclick="closeModal('modal-inactive-email')">&times;</button>
+        </div>
+        <div class="modal-body" id="modal-inactive-email-body">
+          <div class="form-group">
+            <label><b>최근 X개월 이내 뉴스레터 미등록</b></label>
+            <input type="number" id="inactive-months" value="6" min="1" max="36" class="form-control" style="width:100px;display:inline-block;">
+            <span style="margin-left:4px;">개월 전까지</span>
+            <button type="button" id="refresh-inactive-email-list" class="btn btn-secondary" style="margin-left:8px;">리스트 갱신</button>
+          </div>
+          <div class="form-group">
+            <label><b>이메일 리스트 (자동 추출 + 수동 추가)</b></label>
+            <textarea id="inactive-email-list" rows="4" class="form-control"></textarea>
+            <div style="margin-top:6px;">
+              <input type="email" id="manual-inactive-email-input" placeholder="이메일 추가" class="form-control" style="width:60%;display:inline-block;">
+              <button type="button" id="add-manual-inactive-email" class="btn btn-secondary" style="margin-left:6px;">+ 추가</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label><b>제목</b></label>
+            <input type="text" id="inactive-email-subject" class="form-control">
+          </div>
+          <div class="form-group">
+            <label><b>본문</b></label>
+            <textarea id="inactive-email-body" rows="6" class="form-control"></textarea>
+          </div>
+          <div style="margin-bottom:10px;">
+            <button type="button" id="copy-inactive-email-list" class="btn btn-secondary">이메일 복사</button>
+            <button type="button" id="download-inactive-email-list" class="btn btn-secondary">TXT로 저장</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 현지정보출력 모달 -->
+    <div id="modal-export-local-info" class="modal" style="display:none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>현지 정보 엑셀 출력</h2>
+          <button type="button" class="close-btn" onclick="closeModal('modal-export-local-info')">&times;</button>
+        </div>
+        <div class="modal-body" id="modal-export-local-info-body">
+          <div class="form-group">
+            <label><b>출력할 정보 선택</b></label><br>
+            <label style="margin-right:12px;"><input type="checkbox" class="export-field" value="englishName" checked> 영문이름</label>
+            <label style="margin-right:12px;"><input type="checkbox" class="export-field" value="localPhone" checked> 현지전화</label>
+            <label style="margin-right:12px;"><input type="checkbox" class="export-field" value="localAddress" checked> 현지주소</label>
+            <button type="button" id="refresh-export-preview" class="btn btn-secondary" style="margin-left:8px;">미리보기 갱신</button>
+          </div>
+          <div style="margin-bottom:10px;max-height:180px;overflow:auto;">
+            <table id="export-preview-table" style="width:100%;border-collapse:collapse;font-size:0.97em;">
+              <thead><tr id="export-preview-head"></tr></thead>
+              <tbody id="export-preview-body"></tbody>
+            </table>
+          </div>
+          <div style="margin-bottom:10px;">
+            <button type="button" id="download-export-excel" class="btn btn-primary">엑셀로 저장</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 증명서 발급 모달 -->
+    <div id="modal-certificate" class="modal" style="display:none;">
+      <div class="modal-content large-modal">
+        <div class="modal-header">
+          <h2 id="certificate-modal-title">증명서 발급</h2>
+          <button type="button" class="close-btn" onclick="closeModal('modal-certificate')">&times;</button>
+        </div>
+        <div class="modal-body" id="modal-certificate-body">
+          <div class="form-group">
+            <label for="certificate-name-input"><b>이름 입력</b></label>
+            <input type="text" id="certificate-name-input" class="form-control" placeholder="선교사 이름 입력" autocomplete="off">
+            <div id="certificate-autocomplete" class="autocomplete-list"></div>
+          </div>
+          <div id="certificate-confirm-section" style="display:none;margin-bottom:12px;">
+            <span id="certificate-confirm-text"></span>
+            <button type="button" class="btn btn-primary" id="certificate-confirm-yes">예</button>
+            <button type="button" class="btn btn-secondary" id="certificate-confirm-no">아니오</button>
+          </div>
+          <div id="certificate-preview-section" style="display:none;">
+            <div style="margin-bottom:10px;"><b>미리보기</b></div>
+            <div id="certificate-preview-box" style="border:1.5px solid #d0d0e0;border-radius:8px;padding:18px 24px;background:#fff;min-height:180px;">
+              <!-- 임시 증명서 폼 내용 -->
+              <div id="certificate-preview-content">증명서 미리보기 영역입니다.</div>
+            </div>
+            <div style="margin-top:14px;">
+              <button type="button" class="btn btn-primary" id="certificate-print-btn">인쇄</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+         <!-- Firebase SDK (CDN) -->
+     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
+
+     <!-- Firebase Config -->
+     <script src="js/firebase-config.js"></script>
+     
+     <!-- Common Navigation -->
+     <script src="js/common/navigation.js"></script>
+
+    <!-- Page Protection & Auth -->
+    <script src="js/auth.js"></script>
+    
+    <!-- Page Scripts -->
+    <script src="js/firebaseService.js"></script>
+    <script src="js/missionaryManagement.js"></script>
+
+    <!-- Nav Loader & Event Listeners -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('nav.html')
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById('nav-container').innerHTML = data;
+                    
+                    const logoutButton = document.getElementById('logout-button');
+                    if(logoutButton) {
+                        logoutButton.addEventListener('click', () => {
+                            firebase.auth().signOut();
+                        });
+                    }
+
+                    const userEmailSpan = document.getElementById('user-email');
+                    firebase.auth().onAuthStateChanged(user => {
+                        if(user && userEmailSpan) {
+                            userEmailSpan.textContent = user.email;
+                        }
+                    });
+                });
+
+            const addBtn = document.getElementById('addMissionaryBtn');
+            if(addBtn) {
+                addBtn.onclick = () => window.location.href = 'missionary-input.html';
+            }
+        });
+    </script>
+</body>
+</html> 
