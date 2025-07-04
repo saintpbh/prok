@@ -23,6 +23,7 @@ function createFloatingListPopup({ flagUrl, country, missionaryList }) {
     listItems.forEach((listItem, index) => {
         listItem.addEventListener('click', () => {
             const missionary = missionaryList[index];
+            console.log('선교사 이름 클릭됨:', missionary.name);
             showMissionaryDetail(missionary.name);
         });
     });
@@ -68,6 +69,14 @@ function showMissionaryDetail(missionaryName) {
     console.log('showMissionaryDetail 호출됨:', missionaryName);
     // 기존 플로팅 팝업 닫기
     closeFloatingPopup();
+    // 국가별 선교사 리스트 팝업도 닫기
+    const countryPopup = document.querySelector('.country-missionary-popup');
+    if (countryPopup) {
+        countryPopup.classList.add('closing');
+        setTimeout(() => {
+            countryPopup.remove();
+        }, 300);
+    }
     
     // 전역 변수에서 선교사 정보 찾기 (missionaries 배열에서 직접 찾기)
     let missionaryInfo = null;
