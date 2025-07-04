@@ -17,8 +17,7 @@
     },
     "newsletters": {
       ".read": true,
-      ".write": true,
-      ".indexOn": "missionaryId"
+      ".write": true
     },
     "supporters": {
       ".read": true,

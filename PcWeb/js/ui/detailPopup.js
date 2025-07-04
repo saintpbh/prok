@@ -260,23 +260,24 @@ async function fetchMissionaryDetails(name) {
         const missionaryId = Object.keys(missionaryData)[0];
         const missionary = missionaryData[missionaryId];
         
-        // Realtime Database에서 최신 뉴스레터 가져오기 (있는 경우)
+        // Firestore에서 최신 뉴스레터 가져오기 (있는 경우)
         let latestNewsletter = null;
         try {
-            const newsletterSnapshot = await db.ref('newsletters').orderByChild('missionaryId').equalTo(missionaryId).once('value');
-            const newsletterData = newsletterSnapshot.val();
-            
-            if (newsletterData) {
-                // 가장 최신 뉴스레터 찾기
-                const newsletters = Object.values(newsletterData);
-                const sortedNewsletters = newsletters.sort((a, b) => {
-                    const dateA = new Date(a.date || 0);
-                    const dateB = new Date(b.date || 0);
-                    return dateB - dateA;
-                });
+            if (window.firebase && window.firebase.firestore) {
+                const firestore = window.firebase.firestore();
+                const newsletterSnapshot = await firestore
+                    .collection('newsletters')
+                    .where('missionaryId', '==', missionaryId)
+                    .orderBy('createdAt', 'desc')
+                    .limit(1)
+                    .get();
                 
-                if (sortedNewsletters.length > 0) {
-                    latestNewsletter = sortedNewsletters[0];
+                if (!newsletterSnapshot.empty) {
+                    const doc = newsletterSnapshot.docs[0];
+                    latestNewsletter = {
+                        id: doc.id,
+                        ...doc.data()
+                    };
                 }
             }
         } catch (error) {

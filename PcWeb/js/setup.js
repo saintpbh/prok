@@ -359,15 +359,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!link) return;
             
             try {
-                // Firebase Database에 링크 정보 저장
-                const db = window.firebase?.database();
-                if (db) {
-                    await db.ref('newsletters').push({
-                        name: name,
-                        prayer: prayer || '현지 정착과 건강을 위해',
+                // Firestore에 링크 정보 저장
+                const firestore = window.firebase?.firestore();
+                if (firestore) {
+                    await firestore.collection('newsletters').add({
+                        missionaryName: name,
+                        summary: prayer || '현지 정착과 건강을 위해',
                         date: date || new Date().toISOString().split('T')[0],
                         url: link,
-                        uploadedAt: new Date().toISOString(),
+                        createdAt: window.firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: window.firebase.firestore.FieldValue.serverTimestamp(),
                         isExternalLink: true
                     });
                 }
