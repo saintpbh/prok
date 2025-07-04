@@ -524,7 +524,7 @@ function showPopup(elements) {
     popup.style.display = "block"; // 레이아웃 계산을 위해 block으로 설정
     popup.style.visibility = "hidden"; // 하지만 화면에는 보이지 않게
     popup.style.opacity = "0"; // 초기 투명도 0
-    popup.style.zIndex = "10000"; // 최상위 레이어로 설정
+    popup.style.zIndex = "1000004"; // mobile-detail.css보다 높게 설정
     popup.classList.remove('visible', 'animate-in', 'animate-out'); // 기존 애니메이션 클래스 제거
 
     // 팝업의 최종 위치를 먼저 계산하고 적용
