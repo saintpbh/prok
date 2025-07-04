@@ -28,3 +28,158 @@
         transform: scale(0.95) translateY(10px);
     }
 }
+
+/* 상세 팝업 모던 스타일 */
+.detail-popup-modern {
+    position: fixed;
+    z-index: 10000;
+    width: 400px;
+    max-width: 90vw;
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow: hidden;
+    animation: detailPopupFadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.detail-popup-modern .close-btn-modern {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    z-index: 10001;
+}
+
+.detail-popup-modern .close-btn-modern:hover {
+    color: #374151;
+}
+
+.detail-popup-modern .popup-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px 20px 15px 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.detail-popup-modern .missionary-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.detail-popup-modern .missionary-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.detail-popup-modern .missionary-info {
+    flex: 1;
+}
+
+.detail-popup-modern .missionary-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 5px;
+}
+
+.detail-popup-modern .missionary-location {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.detail-popup-modern .prayer-btn {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.detail-popup-modern .prayer-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4);
+}
+
+.detail-popup-modern .popup-body {
+    padding: 20px;
+}
+
+.detail-popup-modern .info-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.detail-popup-modern .info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.detail-popup-modern .info-icon {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+}
+
+.detail-popup-modern .info-content {
+    flex: 1;
+}
+
+.detail-popup-modern .info-label {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 2px;
+}
+
+.detail-popup-modern .info-value {
+    font-size: 14px;
+    color: #374151;
+    font-weight: 500;
+}
+
+.detail-popup-modern .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 10px;
+}
+
+.detail-popup-modern .prayer-content {
+    color: #4a5568;
+    line-height: 1.5;
+    font-size: 14px;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+    .detail-popup-modern {
+        width: 95vw;
+        max-width: 95vw;
+        margin: 10px;
+    }
+}
