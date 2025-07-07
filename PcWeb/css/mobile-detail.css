@@ -10,7 +10,7 @@
         url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500" fill="%23ffffff" opacity="0.08"><path d="M50,100 Q100,80 150,100 T250,100 Q300,80 350,100 T450,100 Q500,80 550,100 T650,100 Q700,80 750,100 T850,100 Q900,80 950,100 M50,150 Q100,130 150,150 T250,150 Q300,130 350,150 T450,150 Q500,130 550,150 T650,150 Q700,130 750,150 T850,150 Q900,130 950,150 M50,200 Q100,180 150,200 T250,200 Q300,180 350,200 T450,200 Q500,180 550,200 T650,200 Q700,180 750,200 T850,200 Q900,180 950,200 M50,250 Q100,230 150,250 T250,250 Q300,230 350,250 T450,250 Q500,230 550,250 T650,250 Q700,230 750,250 T850,250 Q900,230 950,250 M50,300 Q100,280 150,300 T250,300 Q300,280 350,300 T450,300 Q500,280 550,300 T650,300 Q700,280 750,300 T850,300 Q900,280 950,300 M50,350 Q100,330 150,350 T250,350 Q300,330 350,350 T450,350 Q500,330 550,350 T650,350 Q700,330 750,350 T850,350 Q900,330 950,350 M50,400 Q100,380 150,400 T250,400 Q300,380 350,400 T450,400 Q500,380 550,400 T650,400 Q700,380 750,400 T850,400 Q900,380 950,400"/><circle cx="120" cy="120" r="8"/><circle cx="280" cy="140" r="6"/><circle cx="450" cy="130" r="10"/><circle cx="620" cy="150" r="7"/><circle cx="780" cy="125" r="9"/><circle cx="920" cy="135" r="5"/><circle cx="150" cy="180" r="7"/><circle cx="320" cy="200" r="8"/><circle cx="480" cy="190" r="6"/><circle cx="650" cy="210" r="9"/><circle cx="820" cy="185" r="7"/><circle cx="950" cy="195" r="8"/><circle cx="180" cy="240" r="6"/><circle cx="350" cy="260" r="9"/><circle cx="520" cy="250" r="7"/><circle cx="680" cy="270" r="8"/><circle cx="850" cy="245" r="6"/><circle cx="980" cy="255" r="7"/><circle cx="200" cy="300" r="8"/><circle cx="370" cy="320" r="7"/><circle cx="540" cy="310" r="9"/><circle cx="710" cy="330" r="6"/><circle cx="880" cy="305" r="8"/><circle cx="100" cy="340" r="7"/><circle cx="270" cy="360" r="6"/><circle cx="440" cy="350" r="8"/><circle cx="610" cy="370" r="9"/><circle cx="780" cy="345" r="7"/><circle cx="950" cy="355" r="6"/><circle cx="120" cy="390" r="8"/><circle cx="290" cy="410" r="7"/><circle cx="460" cy="400" r="6"/><circle cx="630" cy="420" r="8"/><circle cx="800" cy="395" r="9"/><circle cx="970" cy="405" r="7"/></svg>');
     background-size: cover, 100% 100%;
     backdrop-filter: blur(8px);
-    z-index: 1000001;
+    z-index: 1001;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -291,7 +291,7 @@
         0 6px 16px rgba(0, 0, 0, 0.15),
         inset 0 1px 0 rgba(255, 255, 255, 0.4);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 1000002;
+    z-index: 1002;
 }
 
 .mobile-detail-prayer-btn:hover {
@@ -331,7 +331,7 @@
     padding: 1rem 1.5rem;
     border-radius: 50px;
     font-size: 0.9rem;
-    z-index: 1000003;
+    z-index: 1003;
     opacity: 0;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;

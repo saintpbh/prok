@@ -263,7 +263,7 @@
             padding: 1rem 1.5rem;
             border-radius: 50px;
             font-size: 0.9rem;
-            z-index: 1000003;
+            z-index: 450;
             opacity: 0;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;

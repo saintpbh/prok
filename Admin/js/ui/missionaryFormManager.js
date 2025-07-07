@@ -910,7 +910,7 @@ function showDynamicToast(msg, type = 'info') {
   toast.style.bottom = '40px';
   toast.style.left = '50%';
   toast.style.transform = 'translateX(-50%)';
-  toast.style.zIndex = 9999;
+          toast.style.zIndex = 340;
   
   setTimeout(() => { toast.style.display = 'none'; }, 2000);
 }

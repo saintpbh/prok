@@ -280,7 +280,7 @@ class PrayerClickManager {
         element.style.left = position.x + 'px';
         element.style.top = position.y + 'px';
         element.style.transform = 'translate(-50%, -50%)'; // 요소의 중앙을 position.x, position.y에 맞춤
-        element.style.zIndex = '10000';
+        element.style.zIndex = '340';
         element.style.fontSize = '24px';
         element.style.pointerEvents = 'none';
         element.style.userSelect = 'none';

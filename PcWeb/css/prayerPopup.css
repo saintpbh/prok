@@ -149,10 +149,10 @@
     position: absolute;
     top: 16px;
     right: 16px;
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border: none;
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.9);
     border-radius: 50%;
     cursor: pointer;
     display: flex;
@@ -163,13 +163,19 @@
     z-index: 10;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    font-size: 16px;
 }
 
 .popup-close-btn:hover {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 1);
     color: #374151;
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: scale(1.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.popup-close-btn:active {
+    transform: scale(0.95);
 }
 
 .popup-close-btn:active {
@@ -682,5 +688,127 @@
     
     .prayer-notification .prayer-icon {
         animation: none;
+    }
+}
+
+/* ==========================================================================
+   기도 요청 섹션 스타일
+   ========================================================================== */
+
+.prayer-requests-section {
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.prayer-requests-section .section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.prayer-requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.prayer-request-item {
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.03);
+    transition: all 0.2s ease;
+}
+
+.prayer-request-item:hover {
+    background: rgba(255, 255, 255, 0.95);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.request-date {
+    font-size: 11px;
+    color: #6b7280;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.request-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.request-content .info-icon {
+    font-size: 12px;
+    margin-top: 1px;
+    flex-shrink: 0;
+}
+
+.content-text {
+    font-size: 13px;
+    line-height: 1.4;
+    color: #374151;
+    word-break: break-word;
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+    .prayer-requests-section {
+        background: rgba(0, 0, 0, 0.2);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .prayer-request-item {
+        background: rgba(0, 0, 0, 0.3);
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    .prayer-request-item:hover {
+        background: rgba(0, 0, 0, 0.4);
+    }
+    
+    .request-date {
+        color: #9ca3af;
+    }
+    
+    .content-text {
+        color: #e5e7eb;
+    }
+}
+
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+    .prayer-requests-section {
+        padding: 12px;
+        margin-top: 16px;
+    }
+    
+    .prayer-request-item {
+        padding: 10px;
+    }
+    
+    .content-text {
+        font-size: 12px;
+    }
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+    .prayer-request-item {
+        transition: none;
+    }
+    
+    .prayer-request-item:hover {
+        transform: none;
     }
 }

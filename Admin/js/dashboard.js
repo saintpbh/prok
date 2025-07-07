@@ -488,19 +488,24 @@ class Dashboard {
     }
   }
 
-  // 토스트 메시지 표시
+  // CommonUtils 사용으로 중복 함수 제거
   showToast(message, type = 'info') {
-    const toast = document.getElementById('toast');
-    const toastMessage = document.getElementById('toastMessage');
-    
-    if (toast && toastMessage) {
-      toastMessage.textContent = message;
-      toast.className = `toast ${type}`;
-      toast.style.display = 'block';
+    if (window.CommonUtils && window.CommonUtils.showToast) {
+      window.CommonUtils.showToast(message, type);
+    } else {
+      // 폴백: 기존 방식
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toastMessage');
       
-      setTimeout(() => {
-        toast.style.display = 'none';
-      }, 3000);
+      if (toast && toastMessage) {
+        toastMessage.textContent = message;
+        toast.className = `toast ${type}`;
+        toast.style.display = 'block';
+        
+        setTimeout(() => {
+          toast.style.display = 'none';
+        }, 3000);
+      }
     }
   }
 }

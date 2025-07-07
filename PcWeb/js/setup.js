@@ -68,11 +68,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 뉴스 토글
     const newsToggle = document.getElementById('news-toggle');
-    newsToggle.checked = localStorage.getItem('news-toggle') === 'on';
-    newsToggle.addEventListener('sl-change', () => {
-        localStorage.setItem('news-toggle', newsToggle.checked ? 'on' : 'off');
-        window.fetchNewsFromSheet?.();
-    });
+    if (newsToggle) {
+        newsToggle.checked = localStorage.getItem('news-toggle') === 'on';
+        newsToggle.addEventListener('sl-change', () => {
+            localStorage.setItem('news-toggle', newsToggle.checked ? 'on' : 'off');
+            window.fetchNewsFromSheet?.();
+        });
+    }
 
     // 뉴스 체크 주기 설정
     const newsIntervalInput = document.getElementById('news-interval-input');
@@ -85,79 +87,19 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 테이블 토글 (완전히 안전한 방식)
+    // 테이블 토글 초기화 (현재 HTML에 토글 요소가 없으므로 비활성화)
     const initTableToggles = () => {
         console.log('setup.js: 테이블 토글 초기화 시작');
         
-        // 테이블 ID 매핑
-        const tableMapping = [
-            { toggleId: 'country-table-toggle', tableId: 'missionary-table-country' },
-            { toggleId: 'presbytery-table-toggle', tableId: 'missionary-table-presbytery' }
-        ];
-        
-        // 완전히 안전한 테이블 표시/숨김 함수
-        const setTableVisibility = (tableId, visible) => {
-            try {
-                const element = document.getElementById(tableId);
-                if (!element) {
-                    console.warn(`setup.js: 테이블 요소 없음: ${tableId}`);
-                    return false;
-                }
-                
-                // style 객체가 존재하는지 확인
-                if (!element.style) {
-                    console.warn(`setup.js: 테이블 요소에 style 속성 없음: ${tableId}`);
-                    return false;
-                }
-                
-                // display 속성을 안전하게 설정
-                element.style.setProperty('display', visible ? '' : 'none');
-                console.log(`setup.js: 테이블 ${tableId} -> ${visible ? '표시' : '숨김'}`);
-                return true;
-                
-            } catch (error) {
-                console.error(`setup.js: 테이블 ${tableId} 표시 설정 실패:`, error);
-                return false;
-            }
-        };
-        
-        // 각 토글 설정
-        tableMapping.forEach(({ toggleId, tableId }) => {
-            try {
-                const toggle = document.getElementById(toggleId);
-                if (!toggle) {
-                    console.warn(`setup.js: 토글 요소 없음: ${toggleId}`);
-                    return;
-                }
-                
-                // 초기 상태 설정
-                const savedState = localStorage.getItem(toggleId);
-                const isVisible = savedState !== 'off';
-                toggle.checked = isVisible;
-                
-                // 이벤트 리스너
-                toggle.addEventListener('sl-change', (event) => {
-                    const newState = event.target.checked;
-                    localStorage.setItem(toggleId, newState ? 'on' : 'off');
-                    setTableVisibility(tableId, newState);
-                });
-                
-                // 초기 표시 설정
-                setTimeout(() => {
-                    setTableVisibility(tableId, isVisible);
-                }, 100);
-                
-            } catch (error) {
-                console.error(`setup.js: 토글 ${toggleId} 설정 실패:`, error);
-            }
-        });
+        // 현재 HTML에 토글 요소가 없으므로 초기화하지 않음
+        console.log('setup.js: 토글 요소가 HTML에 없어 초기화를 건너뜁니다.');
         
         console.log('setup.js: 테이블 토글 초기화 완료');
     };
     
-    // DOM 준비 확인 및 초기화
-    let waitCount = 0;
+    // DOM 준비 확인 및 초기화 (토글 요소가 없으므로 단순화)
     const waitForTablesAndInit = () => {
+        // 테이블 요소들이 존재하는지만 확인
         const requiredTables = ['missionary-table-country', 'missionary-table-presbytery'];
         const allExist = requiredTables.every(id => {
             const element = document.getElementById(id);
@@ -165,15 +107,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         if (allExist) {
+            console.log('setup.js: 테이블 요소들이 준비되었습니다.');
             initTableToggles();
         } else {
-            waitCount++;
-            if (waitCount <= 5) {
-                console.log('setup.js: 테이블 요소 대기 중... (' + waitCount + '회)');
-                setTimeout(waitForTablesAndInit, 500);
-            } else {
-                console.warn('setup.js: 테이블 요소를 5회 시도했으나 찾지 못해 중단합니다.');
-            }
+            console.log('setup.js: 일부 테이블 요소가 아직 준비되지 않았습니다.');
         }
     };
     
@@ -195,20 +132,25 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 자동재생 모드 설정
     const autoplayGroup = document.getElementById('autoplay-mode-group');
-    autoplayGroup.value = localStorage.getItem('autoplay-mode') || 'fixed'; // UI에 저장된 값 반영
-    autoplayGroup.addEventListener('sl-change', () => {
-        const newMode = autoplayGroup.value;
-        localStorage.setItem('autoplay-mode', newMode);
-        // MissionaryMap에 변경사항 전파
-        if (window.MissionaryMap && typeof window.MissionaryMap.setAutoplayMode === 'function') {
-            window.MissionaryMap.setAutoplayMode(newMode);
-        }
-    });
+    if (autoplayGroup) {
+        autoplayGroup.value = localStorage.getItem('autoplay-mode') || 'fixed'; // UI에 저장된 값 반영
+        autoplayGroup.addEventListener('sl-change', () => {
+            const newMode = autoplayGroup.value;
+            localStorage.setItem('autoplay-mode', newMode);
+            // MissionaryMap에 변경사항 전파
+            if (window.MissionaryMap && typeof window.MissionaryMap.setAutoplayMode === 'function') {
+                window.MissionaryMap.setAutoplayMode(newMode);
+            }
+        });
+    }
     
     // 각종 설정값 적용 (Input)
     const setupInput = (id, storageKey, callback) => {
         const input = document.getElementById(id);
-        if(!input) return;
+        if(!input) {
+            console.log(`setup.js: ${id} 요소를 찾을 수 없습니다.`);
+            return;
+        }
         input.value = localStorage.getItem(storageKey) || input.value;
         input.addEventListener('sl-change', () => {
             localStorage.setItem(storageKey, input.value);
@@ -371,6 +313,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         updatedAt: window.firebase.firestore.FieldValue.serverTimestamp(),
                         isExternalLink: true
                     });
+                } else {
+                    throw new Error('Firestore가 초기화되지 않았습니다.');
                 }
                 
                 alert('뉴스레터 링크가 성공적으로 저장되었습니다.');
@@ -381,8 +325,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (missionaryDateInput) missionaryDateInput.value = '';
                 
             } catch (error) {
-                console.error('뉴스레터 링크 저장 실패:', error);
-                alert('저장에 실패했습니다: ' + error.message);
+                // 권한 오류는 일반적인 상황이므로 별도 처리
+                if (error.code === 'permission-denied') {
+                    console.log('Firestore 쓰기 권한이 없습니다. (일반적인 상황)');
+                    alert('뉴스레터 링크 저장 권한이 없습니다. 관리자에게 문의하세요.');
+                } else {
+                    console.error('뉴스레터 링크 저장 실패:', error);
+                    alert('저장에 실패했습니다: ' + error.message);
+                }
             }
         });
     }

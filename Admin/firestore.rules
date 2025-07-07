@@ -18,17 +18,50 @@ service cloud.firestore {
              request.auth.token.admin == true;
     }
     
-    // 선교사 데이터 - 관리자만 허용 (UID 기반 + Custom Claims)
+    // 선교사 데이터 - 기본 정보는 누구나 읽기 가능, 전체 정보는 관리자만
     match /missionaries/{missionaryId} {
+      // 기본 정보는 누구나 읽기 가능 (이름, 선교지, 파송년도, 소속기관, 노회, 기도제목)
+      allow read: if resource.data.keys().hasAny(['name', 'country', 'city', 'sent_date', 'organization', 'presbytery', 'prayer', 'summary']);
+      // 전체 정보는 관리자만
       allow read, write: if request.auth != null && (
         request.auth.uid == 'cRl9d4wXG0VXHzsRbLpoLhnCjiK2' ||
         request.auth.token.admin == true
       );
     }
     
-    // 뉴스레터 데이터 - 관리자만 허용 (UID 기반 + Custom Claims)
+    // 선교사 기본 정보 전용 컬렉션 - 누구나 읽기 가능
+    match /missionaryProfiles/{profileId} {
+      allow read: if true; // 누구나 읽기 가능
+      allow write: if request.auth != null && (
+        request.auth.uid == 'cRl9d4wXG0VXHzsRbLpoLhnCjiK2' ||
+        request.auth.token.admin == true
+      );
+    }
+    
+    // 뉴스레터 데이터 - 요약은 누구나 읽기 가능, 전체 내용은 관리자만
     match /newsletters/{newsletterId} {
+      // 요약 정보는 누구나 읽기 가능
+      allow read: if resource.data.keys().hasAny(['summary', 'title', 'date', 'missionaryId']);
+      // 전체 내용은 관리자만
       allow read, write: if request.auth != null && (
+        request.auth.uid == 'cRl9d4wXG0VXHzsRbLpoLhnCjiK2' ||
+        request.auth.token.admin == true
+      );
+    }
+    
+    // 뉴스레터 요약 전용 컬렉션 - 누구나 읽기 가능
+    match /newsletterSummaries/{summaryId} {
+      allow read: if true; // 누구나 읽기 가능
+      allow write: if request.auth != null && (
+        request.auth.uid == 'cRl9d4wXG0VXHzsRbLpoLhnCjiK2' ||
+        request.auth.token.admin == true
+      );
+    }
+    
+    // 기도 요청 - 누구나 읽기 가능
+    match /prayerRequests/{requestId} {
+      allow read: if true; // 누구나 읽기 가능
+      allow write: if request.auth != null && (
         request.auth.uid == 'cRl9d4wXG0VXHzsRbLpoLhnCjiK2' ||
         request.auth.token.admin == true
       );

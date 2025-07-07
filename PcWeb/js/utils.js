@@ -87,4 +87,154 @@ window.fetchData = function(callback) {
     });
     console.log(`fetchData: ${news.length}개의 뉴스 데이터 로드됨`);
   });
+};
+
+// 공통 함수들 - 중복 제거를 위해 통합
+window.CommonUtils = {
+  // 아바타 SVG 생성 함수
+  createAvatarSVG: function(name, size = 80) {
+    if (!name) return '';
+    
+    // 이름에서 이니셜 추출
+    const initials = name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2);
+    
+    // 배경색 생성 (이름 기반)
+    const colors = [
+      '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+      '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
+    ];
+    const colorIndex = name.charCodeAt(0) % colors.length;
+    const bgColor = colors[colorIndex];
+    
+    const svgString = `
+      <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="${size/2}" cy="${size/2}" r="${size/2}" fill="${bgColor}"/>
+        <text x="${size/2}" y="${size/2 + size/8}" font-family="Arial, sans-serif" font-size="${size/3}" 
+              fill="white" text-anchor="middle" dominant-baseline="middle" font-weight="bold">
+          ${initials}
+        </text>
+      </svg>
+    `;
+    
+    return `data:image/svg+xml;base64,${this.safeBtoa(svgString)}`;
+  },
+
+  // 안전한 base64 인코딩 함수
+  safeBtoa: function(str) {
+    try {
+      return btoa(unescape(encodeURIComponent(str)));
+    } catch (e) {
+      console.error('safeBtoa error:', e);
+      return '';
+    }
+  },
+
+  // 토스트 메시지 표시 함수
+  showToast: function(message, type = 'info') {
+    // 기존 토스트 제거
+    const existingToast = document.querySelector('.toast-message');
+    if (existingToast) {
+      existingToast.remove();
+    }
+
+    // 토스트 컨테이너 생성
+    const toast = document.createElement('div');
+    toast.className = `toast-message toast-${type}`;
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 1000;
+      max-width: 300px;
+      word-wrap: break-word;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    `;
+
+    // 타입별 스타일 설정
+    const styles = {
+      success: { backgroundColor: '#4CAF50' },
+      error: { backgroundColor: '#F44336' },
+      warning: { backgroundColor: '#FF9800' },
+      info: { backgroundColor: '#2196F3' }
+    };
+
+    Object.assign(toast.style, styles[type] || styles.info);
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    // 애니메이션
+    setTimeout(() => {
+      toast.style.transform = 'translateX(0)';
+    }, 100);
+
+    // 자동 제거
+    setTimeout(() => {
+      toast.style.transform = 'translateX(100%)';
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.remove();
+        }
+      }, 300);
+    }, 3000);
+  },
+
+  // 디바운스 함수
+  debounce: function(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  },
+
+  // 파일 크기 포맷팅 함수
+  formatFileSize: function(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  },
+
+  // 날짜 포맷팅 함수
+  formatDate: function(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  },
+
+  // 안전한 JSON 파싱 함수
+  safeJSONParse: function(str, defaultValue = null) {
+    try {
+      return JSON.parse(str);
+    } catch (e) {
+      console.error('JSON 파싱 오류:', e);
+      return defaultValue;
+    }
+  },
+
+  // 안전한 함수 실행 함수
+  safeExecute: function(fn, ...args) {
+    try {
+      return fn(...args);
+    } catch (error) {
+      console.error('함수 실행 오류:', error);
+      return null;
+    }
+  }
 }; 

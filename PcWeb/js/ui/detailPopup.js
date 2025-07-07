@@ -7,14 +7,6 @@ const PRAYER_CONFIG = {
         maxScale: 2.5,
         duration: 800
     },
-    
-    // 토스트 메시지 설정
-    toast: {
-        enabled: true,
-        position: 'top', // 'top', 'center', 'bottom'
-        duration: 3000,
-        style: 'slide' // 'slide', 'fade', 'bounce'
-    },
 
     // 대안 애니메이션 (나중에 쉽게 변경)
     alternatives: {
@@ -204,106 +196,176 @@ async function handleDetailPopupPrayerClick(button, name, location) {
     }
 }
 
-// SVG 아바타 생성 함수
-function createAvatarSVG(name, size = 80) {
-    const initials = name ? name.charAt(0).toUpperCase() : '?';
-    const colors = ['#4a90e2', '#7ed321', '#f5a623', '#d0021b', '#9013fe', '#50e3c2'];
-    const color = colors[name ? name.charCodeAt(0) % colors.length : 0];
-    
-    // 안전한 base64 인코딩을 위한 함수
-    function safeBtoa(str) {
-        try {
-            return btoa(unescape(encodeURIComponent(str)));
-        } catch (e) {
-            // 실패 시 기본 이니셜 사용
-            const fallbackInitials = name ? name.charCodeAt(0).toString(16).toUpperCase() : '?';
-            const fallbackSvg = `
-                <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="${size}" height="${size}" fill="${color}" rx="${size/2}"/>
-                    <text x="${size/2}" y="${size/2 + size/8}" font-family="Arial, sans-serif" font-size="${size/3}" 
-                          fill="white" text-anchor="middle" dominant-baseline="middle">${fallbackInitials}</text>
-                </svg>
-            `;
-            return btoa(unescape(encodeURIComponent(fallbackSvg)));
-        }
-    }
-    
-    const svgString = `
-        <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
-            <rect width="${size}" height="${size}" fill="${color}" rx="${size/2}"/>
-            <text x="${size/2}" y="${size/2 + size/8}" font-family="Arial, sans-serif" font-size="${size/3}" 
-                  fill="white" text-anchor="middle" dominant-baseline="middle">${initials}</text>
-        </svg>
-    `;
-    
-    return `data:image/svg+xml;base64,${safeBtoa(svgString)}`;
-}
+// CommonUtils 사용으로 중복 함수 제거
 
-// Firestore에서 선교사 상세 정보 가져오기
+// 선교사 상세 정보 가져오기 (Firestore + 로컬 데이터)
 async function fetchMissionaryDetails(name) {
     try {
-        if (!window.firebase || !window.firebase.database) {
-            console.warn('Firebase Database가 로드되지 않았습니다. 기존 데이터를 사용합니다.');
-            return null;
-        }
-
-        // Realtime Database에서 선교사 기본 정보 가져오기
-        const db = window.firebase.database();
-        const missionarySnapshot = await db.ref('missionaries').orderByChild('name').equalTo(name).once('value');
-        const missionaryData = missionarySnapshot.val();
-        
-        if (!missionaryData) {
-            console.warn('선교사 데이터를 찾을 수 없습니다:', name);
-            return null;
-        }
-        
-        const missionaryId = Object.keys(missionaryData)[0];
-        const missionary = missionaryData[missionaryId];
-        
-        // Firestore에서 최신 뉴스레터 가져오기 (있는 경우)
-        let latestNewsletter = null;
-        try {
-            if (window.firebase && window.firebase.firestore) {
-                const firestore = window.firebase.firestore();
-                const newsletterSnapshot = await firestore
-                    .collection('newsletters')
-                    .where('missionaryId', '==', missionaryId)
-                    .orderBy('createdAt', 'desc')
+        // Firestore에서 선교사 정보 가져오기
+        if (firebase && firebase.firestore) {
+            const db = firebase.firestore();
+            
+            // 선교사 기본 정보 (이제 누구나 읽기 가능)
+            let missionary = null;
+            try {
+                // 먼저 missionaryProfiles 컬렉션에서 시도 (누구나 읽기 가능)
+                const profileDoc = await db.collection('missionaryProfiles')
+                    .where('name', '==', name)
                     .limit(1)
                     .get();
                 
-                if (!newsletterSnapshot.empty) {
-                    const doc = newsletterSnapshot.docs[0];
-                    latestNewsletter = {
-                        id: doc.id,
-                        ...doc.data()
-                    };
+                if (!profileDoc.empty) {
+                    missionary = profileDoc.docs[0].data();
+                    console.log('missionaryProfiles에서 선교사 정보 찾음:', name);
+                } else {
+                    // missionaries 컬렉션에서 기본 정보만 가져오기 시도
+                    const missionaryDoc = await db.collection('missionaries')
+                        .where('name', '==', name)
+                        .limit(1)
+                        .get();
+                    
+                    if (!missionaryDoc.empty) {
+                        const fullData = missionaryDoc.docs[0].data();
+                        // 기본 정보만 추출 (보안 규칙에 따라 허용된 필드만)
+                        missionary = {
+                            name: fullData.name,
+                            country: fullData.country,
+                            city: fullData.city,
+                            sent_date: fullData.sent_date,
+                            organization: fullData.organization,
+                            presbytery: fullData.presbytery,
+                            prayer: fullData.prayer,
+                            summary: fullData.summary,
+                            image: fullData.image // 이미지도 기본 정보에 포함
+                        };
+                        console.log('missionaries에서 선교사 기본 정보 찾음:', name);
+                    }
+                }
+            } catch (error) {
+                // 권한 오류는 정상적인 상황이므로 로그만 출력
+                if (error.code === 'permission-denied') {
+                    console.log('Firestore 선교사 데이터 읽기 권한이 없습니다. (일반적인 상황)');
+                } else {
+                    console.warn('선교사 데이터 가져오기 실패:', error.message);
                 }
             }
-        } catch (error) {
-            console.warn('뉴스레터 데이터 가져오기 실패:', error);
+            
+            // 뉴스레터 요약 정보 (Firebase 인덱스 오류 방지)
+            let latestNewsletter = null;
+            // Firebase 쿼리는 나중에 인덱스가 설정된 후에 활성화
+            /*
+            try {
+                // 먼저 newsletterSummaries 컬렉션에서 시도
+                const summaryDoc = await db.collection('newsletterSummaries')
+                    .where('missionaryName', '==', name)
+                    .orderBy('date', 'desc')
+                    .limit(1)
+                    .get();
+                
+                if (!summaryDoc.empty) {
+                    latestNewsletter = summaryDoc.docs[0].data();
+                    console.log('newsletterSummaries에서 뉴스레터 요약 찾음:', name);
+                } else {
+                    // newsletters 컬렉션에서 요약 정보만 가져오기 시도
+                    const newsletterDoc = await db.collection('newsletters')
+                        .where('missionaryName', '==', name)
+                        .orderBy('date', 'desc')
+                        .limit(1)
+                        .get();
+                    
+                    if (!newsletterDoc.empty) {
+                        const newsletterData = newsletterDoc.docs[0].data();
+                        // 요약 정보만 추출
+                        latestNewsletter = {
+                            summary: newsletterData.summary || newsletterData.content?.substring(0, 200) + '...',
+                            title: newsletterData.title,
+                            date: newsletterData.date,
+                            missionaryName: newsletterData.missionaryName
+                        };
+                        console.log('newsletters에서 뉴스레터 요약 찾음:', name);
+                    }
+                }
+            } catch (error) {
+                console.log('Firebase 인덱스가 설정되지 않았습니다. 기본 정보를 사용합니다.');
+            }
+            */
+            
+            // 기도 요청 정보 (Firebase 인덱스 오류 방지)
+            let prayerRequests = [];
+            // Firebase 쿼리는 나중에 인덱스가 설정된 후에 활성화
+            /*
+            try {
+                const prayerDoc = await db.collection('prayerRequests')
+                    .where('missionaryName', '==', name)
+                    .orderBy('date', 'desc')
+                    .limit(3) // 최근 3개만
+                    .get();
+                
+                if (!prayerDoc.empty) {
+                    prayerRequests = prayerDoc.docs.map(doc => doc.data());
+                    console.log('prayerRequests에서 기도 요청 찾음:', name, prayerRequests.length);
+                }
+            } catch (error) {
+                console.log('Firebase 인덱스가 설정되지 않았습니다. 기본 정보를 사용합니다.');
+            }
+            */
+            
+            return {
+                ...missionary,
+                id: missionary?.id || name,
+                latestNewsletter,
+                prayerRequests
+            };
         }
-        
-        return {
-            ...missionary,
-            id: missionaryId,
-            latestNewsletter
-        };
     } catch (error) {
         console.error('선교사 상세 정보 가져오기 실패:', error);
-        return null;
     }
+    
+    return null;
 }
 
 // 메인 상세보기 팝업 함수
 window.showDetailPopup = async function(name, latlng, missionaryInfo, elements) {
+    // elements 객체 안전성 체크
+    if (!elements || !elements.detailPopup) {
+        console.error('detailPopup 요소를 찾을 수 없습니다. elements:', elements);
+        
+        // 기본 elements 객체 생성 시도
+        const defaultElements = {
+            detailPopup: document.getElementById('detail-popup') || 
+                        document.querySelector('.detail-popup') ||
+                        document.createElement('div')
+        };
+        
+        if (!defaultElements.detailPopup.id && !defaultElements.detailPopup.className) {
+            // 완전히 새로운 팝업 요소 생성
+            const newPopup = document.createElement('div');
+            newPopup.id = 'detail-popup';
+            newPopup.className = 'detail-popup';
+            newPopup.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: none;
+                z-index: 1000;
+            `;
+            document.body.appendChild(newPopup);
+            defaultElements.detailPopup = newPopup;
+        }
+        
+        elements = defaultElements;
+    }
+    
     // Firestore에서 최신 데이터 가져오기
     const freshData = await fetchMissionaryDetails(name);
     const info = freshData || missionaryInfo[name] || {};
     
     const sentDate = info.sent_date ? new Date(info.sent_date) : null;
     const sentYear = sentDate ? sentDate.getFullYear() : '정보 없음';
-    const imgSrc = info.image && info.image.trim() ? info.image.trim() : createAvatarSVG(name, 320);
+    const imgSrc = info.image && info.image.trim() ? info.image.trim() : window.CommonUtils.createAvatarSVG(name, 320);
     const newsUrl = info.NewsLetter ? info.NewsLetter.trim() : '';
     const location = `${info.country || '정보없음'}, ${info.city || ''}`.replace(/, $/, '');
     
@@ -330,7 +392,7 @@ window.showDetailPopup = async function(name, latlng, missionaryInfo, elements) 
             <div class="popup-header">
                 <div class="missionary-avatar">
                     <img src="${imgSrc}" alt="${name}" loading="lazy" 
-                         onerror="this.src='${createAvatarSVG(name, 80)}';">
+                         onerror="this.src='${window.CommonUtils.createAvatarSVG(name, 80)}';">
                 </div>
                 <div class="missionary-info">
                     <h2 class="missionary-name">${name}</h2>
@@ -375,6 +437,27 @@ window.showDetailPopup = async function(name, latlng, missionaryInfo, elements) 
                     <p class="prayer-content">${prayerHtml}</p>
                 </div>
 
+                <!-- 기도 요청 섹션 -->
+                ${info.prayerRequests && info.prayerRequests.length > 0 ? `
+                <div class="prayer-requests-section">
+                    <h3 class="section-title">📝 기도 요청</h3>
+                    <div class="prayer-requests-list">
+                        ${info.prayerRequests.map(request => `
+                        <div class="prayer-request-item">
+                            <div class="request-date">
+                                <span class="info-icon">📅</span>
+                                ${request.date ? new Date(request.date).toLocaleDateString('ko-KR') : '날짜 정보 없음'}
+                            </div>
+                            <div class="request-content">
+                                <span class="info-icon">💬</span>
+                                <div class="content-text">${request.content || request.request || '내용 없음'}</div>
+                            </div>
+                        </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
                 <!-- 최신 뉴스레터 섹션 -->
                 ${info.latestNewsletter ? `
                 <div class="newsletter-section">
@@ -394,6 +477,18 @@ window.showDetailPopup = async function(name, latlng, missionaryInfo, elements) 
                         <div class="newsletter-content">
                             <span class="info-icon">📝</span>
                             <div class="content-preview">${info.latestNewsletter.content.substring(0, 100)}${info.latestNewsletter.content.length > 100 ? '...' : ''}</div>
+                        </div>
+                        ` : ''}
+                        ${info.latestNewsletter.summary ? `
+                        <div class="newsletter-summary">
+                            <span class="info-icon">📄</span>
+                            <div class="summary-preview">${info.latestNewsletter.summary.substring(0, 150)}${info.latestNewsletter.summary.length > 150 ? '...' : ''}</div>
+                        </div>
+                        ` : ''}
+                        ${!info.latestNewsletter.title && !info.latestNewsletter.content && !info.latestNewsletter.summary ? `
+                        <div class="newsletter-empty">
+                            <span class="info-icon">📄</span>
+                            <div class="empty-message">내용 없음</div>
                         </div>
                         ` : ''}
                     </div>
@@ -524,7 +619,7 @@ function showPopup(elements) {
     popup.style.display = "block"; // 레이아웃 계산을 위해 block으로 설정
     popup.style.visibility = "hidden"; // 하지만 화면에는 보이지 않게
     popup.style.opacity = "0"; // 초기 투명도 0
-    popup.style.zIndex = "1000004"; // mobile-detail.css보다 높게 설정
+    popup.style.zIndex = "400"; // 선교사 상세 팝업 (권장값)
     popup.classList.remove('visible', 'animate-in', 'animate-out'); // 기존 애니메이션 클래스 제거
 
     // 팝업의 최종 위치를 먼저 계산하고 적용

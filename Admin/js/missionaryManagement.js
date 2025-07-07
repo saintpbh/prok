@@ -209,14 +209,6 @@ async function loadMissionaries() {
     console.log('Admin: 선교사 목록 로드 완료:', missionaries.length);
     console.log('Admin: 선교사 목록 (이름만):', missionaries.map(m => m.name));
     
-    // 오은성 선교사 확인
-    const ohEunSung = missionaries.find(m => m.name === '오은성' || m.name.includes('오은성'));
-    if (ohEunSung) {
-      console.log('Admin: 오은성 선교사 발견:', ohEunSung);
-    } else {
-      console.log('Admin: 오은성 선교사를 찾을 수 없습니다.');
-    }
-    
   } catch (error) {
     console.error('Admin: 선교사 목록 로드 실패:', error);
     showToast('선교사 목록 로드 실패: ' + error.message, 'error');
@@ -1905,7 +1897,7 @@ function renderReadOnlyMissionaryModal(missionary) {
 
   // 상세 정보 HTML
   const html = `
-    <div id="readOnlyMissionaryModal" class="modal" style="display: flex; z-index: 99999; align-items: center; justify-content: center;">
+    <div id="readOnlyMissionaryModal" class="modal" style="display: flex; z-index: 750; align-items: center; justify-content: center;">
       <div class="modal-content large-modal" style="max-width:600px;width:90vw;position:relative;">
         <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;">
           <h2>선교사 정보</h2>

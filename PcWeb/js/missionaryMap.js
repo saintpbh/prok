@@ -90,7 +90,6 @@ window.MissionaryMap = class MissionaryMap {
         // 전역 함수로 등록
         window.MissionaryMap = this;
         window.showDetailPopup = this.showDetailPopup.bind(this);
-        window.closeDetailPopup = this.closeDetailPopup.bind(this);
         window.showFloatingListPopup = this.showFloatingListPopup.bind(this);
         window.showFloatingPrayerPopup = this.showFloatingPrayerPopup.bind(this);
         
@@ -199,20 +198,6 @@ window.MissionaryMap = class MissionaryMap {
             console.log(`missionaryMap: ${missionaries.length}명의 선교사 데이터 로드됨`);
             console.log('로드된 선교사 목록:', missionaries.map(m => `${m.name} (${m.country})`));
             
-            // 오은성 선교사가 있는지 확인
-            const ohEunSung = missionaries.find(m => m.name === '오은성' || m.name.includes('오은성'));
-            if (ohEunSung) {
-                console.log('오은성 선교사 발견:', ohEunSung);
-            } else {
-                console.log('오은성 선교사를 찾을 수 없습니다.');
-                console.log('전체 선교사 목록 (이름만):');
-                missionaries.forEach(m => console.log(`- ${m.name}`));
-                console.log('일본 선교사들:');
-                missionaries.filter(m => m.country === '일본').forEach(m => console.log(`- ${m.name} (${m.country})`));
-                console.log('전체 선교사 데이터 (상세):');
-                missionaries.forEach(m => console.log(`- ${m.name} (${m.country}) - ID: ${m._id || m.id}`));
-            }
-            
             // 선교사 데이터 처리 및 렌더링
             this.processData(missionaries);
             this.renderAll();
@@ -261,15 +246,6 @@ window.MissionaryMap = class MissionaryMap {
         
         console.log('선교사 데이터 처리 완료:', this.state.missionaries.length, '명');
         console.log('정렬된 선교사 목록:', this.state.missionaries.map(m => `${m.name} (${m.lastUpdate || '날짜 없음'})`));
-        
-        // 오은성 선교사 처리 확인
-        const ohEunSungProcessed = this.state.missionaries.find(m => m.name === '오은성' || m.name.includes('오은성'));
-        if (ohEunSungProcessed) {
-            console.log('처리된 오은성 선교사:', ohEunSungProcessed);
-            console.log('오은성 선교사 국가 통계:', this.state.countryStats[ohEunSungProcessed.country]);
-        } else {
-            console.log('처리된 데이터에서 오은성 선교사를 찾을 수 없습니다.');
-        }
     }
 
     renderAll() {
@@ -379,17 +355,30 @@ window.MissionaryMap = class MissionaryMap {
             // const marker = L.marker(latlng).bindPopup(popupHTML);
             const marker = L.marker(latlng);
 
-            // 마커 클릭 이벤트 추가 - 플로팅 리스트 팝업 표시
+            // 마커 클릭 이벤트 추가 - 새로운 독립적인 선교사 리스트 표시
             marker.on('click', (e) => {
                 // 선교사 이름 배열을 객체 배열로 변환 (이름과 도시 정보 포함)
                 const missionaryList = stats.names.map(name => {
                     const missionary = this.state.missionaryInfo[name];
                     return {
                         name: name,
-                        city: missionary ? missionary.city : '정보없음'
+                        city: missionary ? missionary.city : '정보없음',
+                        country: country,
+                        organization: missionary ? missionary.organization : '',
+                        presbytery: missionary ? missionary.presbytery : '',
+                        sent_date: missionary ? missionary.sent_date : '',
+                        prayer: missionary ? missionary.prayer : '',
+                        summary: missionary ? missionary.summary : ''
                     };
                 });
-                this.showFloatingListPopup(country, missionaryList, e.latlng);
+                
+                // 새로운 독립적인 선교사 리스트 표시
+                if (window.showCountryMissionaryList) {
+                    window.showCountryMissionaryList(country, missionaryList);
+                } else {
+                    // 폴백: 기존 플로팅 리스트 사용
+                    this.showFloatingListPopup(country, missionaryList, e.latlng);
+                }
             });
 
             // DataManager에 마커-데이터 매핑 등록
@@ -520,6 +509,8 @@ window.MissionaryMap = class MissionaryMap {
         
         this.timers.presbytery = setTimeout(() => { this.state.isPaused = false; }, this.constants.PRESBYTERY_FLOAT_DURATION + this.constants.PRESBYTERY_PAUSE_EXTRA);
     }
+
+    
 
     
 
@@ -994,17 +985,24 @@ window.MissionaryMap = class MissionaryMap {
             }
         };
 
-        // 즉시 시도
-        if (!initPrayerCountWithRetry()) {
-            // 실패하면 1초 후 재시도
-            setTimeout(() => {
-                if (!initPrayerCountWithRetry()) {
-                    // 2번째 실패하면 2초 후 재시도
-                    setTimeout(() => {
-                        initPrayerCountWithRetry();
-                    }, 2000);
-                }
-            }, 1000);
+        // DOM이 완전히 로드된 후 시도
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(initPrayerCountWithRetry, 100);
+            });
+        } else {
+            // 즉시 시도
+            if (!initPrayerCountWithRetry()) {
+                // 실패하면 1초 후 재시도
+                setTimeout(() => {
+                    if (!initPrayerCountWithRetry()) {
+                        // 2번째 실패하면 2초 후 재시도
+                        setTimeout(() => {
+                            initPrayerCountWithRetry();
+                        }, 2000);
+                    }
+                }, 1000);
+            }
         }
     }
 

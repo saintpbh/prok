@@ -286,7 +286,7 @@ window.showSaveSuccessToast = function(message) {
     padding: 15px 20px;
     border-radius: 10px;
     box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
-    z-index: 10000;
+    z-index: 750;
     transform: translateX(100%);
     transition: transform 0.3s ease;
     backdrop-filter: blur(10px);

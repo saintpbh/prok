@@ -7,14 +7,6 @@ const PRAYER_CONFIG = {
         maxScale: 2.5,
         duration: 800
     },
-    
-    // 토스트 메시지 설정
-    toast: {
-        enabled: true,
-        position: 'top', // 'top', 'center', 'bottom'
-        duration: 3000,
-        style: 'slide' // 'slide', 'fade', 'bounce'
-    },
 
     // 대안 애니메이션 (나중에 쉽게 변경)
     alternatives: {
@@ -22,37 +14,6 @@ const PRAYER_CONFIG = {
         glitchEffect: false // 글리치 효과
     }
 };
-
-// 토스트 메시지 생성 및 표시
-function showPrayerToast(name, location) {
-    const existingToast = document.querySelector('.prayer-toast');
-    if (existingToast) existingToast.remove();
-
-    const toast = document.createElement('div');
-    toast.className = 'prayer-toast';
-    toast.innerHTML = `
-        <div class="toast-content">
-            <span class="toast-icon">🙏</span>
-            <div class="toast-text">
-                <div class="toast-main">${name}님을 위해 기도합니다</div>
-                <div class="toast-sub">${location} 사역을 축복해 주세요</div>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(toast);
-    
-    // 애니메이션 실행
-    requestAnimationFrame(() => {
-        toast.classList.add('show');
-    });
-
-    // 자동 제거
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, PRAYER_CONFIG.toast.duration);
-}
 
 // 펄스 링 애니메이션
 function createPulseRing(button) {

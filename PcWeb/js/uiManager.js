@@ -319,52 +319,114 @@ const UIManager = {
         if (window.showDetailPopup) {
             window.showDetailPopup(name, latlngArray, missionaryInfo, elements);
         } else {
-            // 폴백: 기존 방식 사용
-            console.warn('showDetailPopup 함수가 없습니다. 기존 방식으로 폴백합니다.');
-            this.showLegacyDetailPopup(name, latlngArray);
+            // 폴백: 테스트 디자인 기반 상세 팝업 생성
+            this.createTestStyleDetailPopup(name, latlngArray);
         }
         
         this.mapController.state.currentDetailPopup = elements.detailPopup;
     },
 
-    showLegacyDetailPopup(name, latlngArray) {
+    // 테스트 디자인 기반 상세 팝업 생성
+    createTestStyleDetailPopup(name, latlngArray) {
         const info = this.dataManager.getMissionaryInfo(name);
         if (!info) return;
 
-        // SVG 아바타 생성 함수
-        function createAvatarSVG(name, size = 600) {
-            const initials = name ? name.charAt(0).toUpperCase() : '?';
-            const colors = ['#4a90e2', '#7ed321', '#f5a623', '#d0021b', '#9013fe', '#50e3c2'];
-            const color = colors[name ? name.charCodeAt(0) % colors.length : 0];
+        // 기존 팝업 제거
+        this.closeDetailPopup();
+
+        const popup = document.createElement('div');
+        popup.className = 'detail-popup-modern';
+        popup.innerHTML = `
+            <button class="close-btn-modern">✕</button>
             
-            // 안전한 base64 인코딩을 위한 함수
-            function safeBtoa(str) {
-                try {
-                    return btoa(unescape(encodeURIComponent(str)));
-                } catch (e) {
-                    // 실패 시 기본 이니셜 사용
-                    const fallbackInitials = name ? name.charCodeAt(0).toString(16).toUpperCase() : '?';
-                    const fallbackSvg = `
-                        <svg width="${size}" height="${size/2}" viewBox="0 0 ${size} ${size/2}" xmlns="http://www.w3.org/2000/svg">
-                            <rect width="${size}" height="${size/2}" fill="${color}"/>
-                            <text x="${size/2}" y="${size/4 + size/16}" font-family="Arial, sans-serif" font-size="${size/8}" 
-                                  fill="white" text-anchor="middle" dominant-baseline="middle">${fallbackInitials}</text>
-                        </svg>
-                    `;
-                    return btoa(unescape(encodeURIComponent(fallbackSvg)));
-                }
-            }
+            <div class="popup-header">
+                <div class="missionary-avatar">
+                    ${name.charAt(0)}
+                </div>
+                <div class="missionary-info">
+                    <h2 class="missionary-name">${name}</h2>
+                    <p class="missionary-location">📍 ${info.country}${info.city ? ' · ' + info.city : ''}</p>
+                </div>
+                <button class="prayer-btn" data-name="${name}">
+                    <span class="prayer-emoji">🙏</span>
+                </button>
+            </div>
+
+            <div class="popup-body">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-icon">📅</span>
+                        <div class="info-content">
+                            <div class="info-label">파송년도</div>
+                            <div class="info-value">${info.dispatchDate || '정보없음'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-icon">🏢</span>
+                        <div class="info-content">
+                            <div class="info-label">소속기관</div>
+                            <div class="info-value">${info.organization || '정보없음'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item">
+                        <span class="info-icon">⛪</span>
+                        <div class="info-content">
+                            <div class="info-label">노회</div>
+                            <div class="info-value">${info.presbytery || '정보없음'}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="prayer-section">
+                    <h3 class="section-title">🙏 기도제목</h3>
+                    <p class="prayer-content">${info.prayer || '기도제목이 없습니다.'}</p>
+                </div>
+            </div>
+        `;
+
+        // 닫기 버튼 이벤트
+        const closeBtn = popup.querySelector('.close-btn-modern');
+        closeBtn.addEventListener('click', () => {
+            popup.remove();
+            this.mapController.state.currentDetailPopup = null;
+        });
+
+        // 기도 버튼 이벤트
+        const prayerBtn = popup.querySelector('.prayer-btn');
+        prayerBtn.addEventListener('click', () => {
+            console.log(`기도 버튼 클릭됨: ${name}`);
+            // 기도 알림 표시 로직 추가 가능
+        });
+
+        // 팝업을 지도 컨테이너에 추가
+        if (this.elements.mapContainer) {
+            this.elements.mapContainer.appendChild(popup);
             
-            const svgString = `
-                <svg width="${size}" height="${size/2}" viewBox="0 0 ${size} ${size/2}" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="${size}" height="${size/2}" fill="${color}"/>
-                    <text x="${size/2}" y="${size/4 + size/16}" font-family="Arial, sans-serif" font-size="${size/8}" 
-                          fill="white" text-anchor="middle" dominant-baseline="middle">${initials}</text>
-                </svg>
-            `;
+            // 팝업 위치 설정 (화면 중앙)
+            const rect = popup.getBoundingClientRect();
+            popup.style.position = 'absolute';
+            popup.style.left = `${(window.innerWidth - rect.width) / 2}px`;
+            popup.style.top = `${(window.innerHeight - rect.height) / 2}px`;
+            popup.style.zIndex = '1000';
             
-            return `data:image/svg+xml;base64,${safeBtoa(svgString)}`;
+            this.mapController.state.currentDetailPopup = popup;
         }
+    },
+
+    showLegacyDetailPopup(name, latlngArray) {
+        try {
+            const info = this.dataManager.getMissionaryInfo(name);
+            if (!info) {
+                console.error('선교사 정보를 찾을 수 없습니다:', name);
+                if (window.CommonUtils && window.CommonUtils.showToast) {
+                    window.CommonUtils.showToast('선교사 정보를 찾을 수 없습니다.', 'error');
+                }
+                return;
+            }
+
+        // CommonUtils 사용으로 중복 함수 제거
 
         const card = document.createElement('div');
         card.className = 'detail-popup-card';
@@ -379,11 +441,11 @@ const UIManager = {
 
         const city = info.city && info.city.trim() ? info.city.trim() : '';
         const location = city ? `${info.country} · ${city}` : info.country;
-        const imgSrc = info.image && info.image.trim() ? info.image.trim() : createAvatarSVG(name, 600);
+        const imgSrc = info.image && info.image.trim() ? info.image.trim() : window.CommonUtils.createAvatarSVG(name, 600);
 
         card.innerHTML = `
             <div class="detail-cover">
-                <img src="${imgSrc}" alt="${name}" onerror="this.src='${createAvatarSVG(name, 600)}';">
+                <img src="${imgSrc}" alt="${name}" onerror="this.src='${window.CommonUtils.createAvatarSVG(name, 600)}';">
                 <div class="cover-overlay">
                     <h2>${name}</h2>
                 </div>
@@ -415,6 +477,12 @@ const UIManager = {
             });
         }
         this.mapController.positionPopup(latlngArray);
+        } catch (error) {
+            console.error('상세 팝업 표시 중 오류 발생:', error);
+            if (window.CommonUtils && window.CommonUtils.showToast) {
+                window.CommonUtils.showToast('상세 팝업을 표시할 수 없습니다.', 'error');
+            }
+        }
     },
 
     closeDetailPopup() {
@@ -636,19 +704,23 @@ const UIManager = {
                         if (this.mapController.markerClusterGroup) {
                             // 클러스터 내 마커들 중 해당 선교사 마커 찾기
                             this.mapController.markerClusterGroup.eachLayer(marker => {
-                                if (marker.getPopup && marker.getPopup().getContent) {
-                                    const popupContent = marker.getPopup().getContent();
-                                    if (popupContent && popupContent.includes(name)) {
-                                        // 마커에 포커스 효과 추가 (null 체크 추가)
-                                        const markerElement = marker.getElement();
-                                        if (markerElement) {
-                                            markerElement.classList.add('marker-focused');
-                                        setTimeout(() => {
-                                                const element = marker.getElement();
-                                                if (element) {
-                                                    element.classList.remove('marker-focused');
+                                // 안전한 체크: getPopup 메서드와 팝업 존재 여부 확인
+                                if (marker && marker.getPopup && typeof marker.getPopup === 'function') {
+                                    const popup = marker.getPopup();
+                                    if (popup && popup.getContent && typeof popup.getContent === 'function') {
+                                        const popupContent = popup.getContent();
+                                        if (popupContent && popupContent.includes(name)) {
+                                            // 마커에 포커스 효과 추가 (null 체크 추가)
+                                            const markerElement = marker.getElement();
+                                            if (markerElement) {
+                                                markerElement.classList.add('marker-focused');
+                                                setTimeout(() => {
+                                                    const element = marker.getElement();
+                                                    if (element) {
+                                                        element.classList.remove('marker-focused');
+                                                    }
+                                                }, 2000);
                                             }
-                                        }, 2000);
                                         }
                                     }
                                 }

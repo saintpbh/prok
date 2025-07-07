@@ -8,43 +8,50 @@ class AccessibilityManager {
     }
 
     init() {
-        // 접근성 모드 토글 버튼 생성
-        this.createAccessibilityToggle();
+        // 접근성 모드 비활성화 상태로 초기화
+        console.log('접근성 모드가 비활성화되었습니다.');
         
-        // 콘솔 메시지 가로채기
-        this.interceptConsole();
+        // 콘솔 가로채기 비활성화
+        // this.interceptConsole();
         
-        // 키보드 단축키 설정
+        // 키보드 단축키 설정 (기본 기능만 유지)
         this.setupKeyboardShortcuts();
         
-        console.log('접근성 관리자가 초기화되었습니다.');
+        // UI 요소 강화 (기본 접근성 속성만 유지)
+        this.enhanceUIElements();
     }
 
+    // 접근성 토글 버튼 생성 (비활성화)
     createAccessibilityToggle() {
+        // 접근성 모드 비활성화로 인해 토글 버튼 생성하지 않음
+        return;
+        
+        // 기존 코드는 주석 처리
+        /*
         const toggle = document.createElement('button');
         toggle.id = 'accessibility-toggle';
-        toggle.innerHTML = '🔊 접근성 모드';
+        toggle.innerHTML = '♿';
+        toggle.title = '접근성 모드 토글 (Alt+A)';
+        toggle.className = 'accessibility-toggle';
         toggle.style.cssText = `
             position: fixed;
-            top: -10px; /* 30픽셀 위로 올림 */
-            left: 20px;
-            z-index: 10000;
-            padding: 10px 15px;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
             background: rgba(0, 0, 0, 0.8);
             color: white;
             border: none;
-            border-radius: 8px;
+            font-size: 20px;
             cursor: pointer;
-            font-size: 14px;
-            backdrop-filter: blur(10px);
+            z-index: 1000;
             transition: all 0.3s ease;
         `;
-
-        toggle.addEventListener('click', () => {
-            this.toggleAccessibilityMode();
-        });
-
+        
+        toggle.addEventListener('click', () => this.toggleAccessibilityMode());
         document.body.appendChild(toggle);
+        */
     }
 
     toggleAccessibilityMode() {
@@ -130,7 +137,7 @@ class AccessibilityManager {
             padding: 20px 30px;
             border-radius: 10px;
             font-size: 16px;
-            z-index: 10001;
+            z-index: 810;
             max-width: 400px;
             text-align: center;
             backdrop-filter: blur(10px);
@@ -150,26 +157,29 @@ class AccessibilityManager {
 
     setupKeyboardShortcuts() {
         document.addEventListener('keydown', (e) => {
-            // Alt + A: 접근성 모드 토글
+            // Alt + A: 접근성 모드 토글 (비활성화)
             if (e.altKey && e.key === 'a') {
                 e.preventDefault();
-                this.toggleAccessibilityMode();
+                console.log('접근성 모드가 비활성화되어 있습니다.');
+                return;
             }
 
-            // Alt + C: 콘솔 메시지 읽기
+            // Alt + C: 콘솔 메시지 읽기 (비활성화)
             if (e.altKey && e.key === 'c') {
                 e.preventDefault();
-                this.readConsoleMessages();
+                console.log('접근성 모드가 비활성화되어 있습니다.');
+                return;
             }
 
-            // Alt + H: 도움말
+            // Alt + H: 도움말 (비활성화)
             if (e.altKey && e.key === 'h') {
                 e.preventDefault();
-                this.showHelp();
+                console.log('접근성 모드가 비활성화되어 있습니다.');
+                return;
             }
         });
 
-        // 전체화면 모드 감지
+        // 전체화면 모드 감지 (기본 기능은 유지)
         this.detectFullscreenMode();
     }
 
@@ -259,15 +269,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
 });
 
-// 전역 함수로 접근성 기능 노출
+// 전역 함수로 접근성 기능 노출 (비활성화)
 window.announceToScreenReader = (message) => {
-    if (window.accessibilityManager) {
-        window.accessibilityManager.announce(message);
-    }
+    // 접근성 모드가 비활성화되어 있음
+    console.log('접근성 모드가 비활성화되어 있습니다.');
 };
 
 window.toggleAccessibilityMode = () => {
-    if (window.accessibilityManager) {
-        window.accessibilityManager.toggleAccessibilityMode();
-    }
+    // 접근성 모드가 비활성화되어 있음
+    console.log('접근성 모드가 비활성화되어 있습니다.');
 }; 

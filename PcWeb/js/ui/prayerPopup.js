@@ -9,10 +9,13 @@ class PrayerPopupManager {
         this.interval = null;
         this.isRunning = false;
         this.isPaused = false;
+        this.forcePaused = false; // 강제 일시정지 상태
+        this.autoRestartTimer = null; // 자동 재시작 타이머
         this.missionaries = [];
         this.currentPopup = null;
         this.animationDuration = 4000; // 4초
         this.fadeDuration = 300; // 페이드 애니메이션 시간
+        this.autoRestartDelay = 3000; // 자동 재시작 지연 시간 (3초)
     }
 
     // 순회 시작
@@ -47,8 +50,13 @@ class PrayerPopupManager {
             clearInterval(this.interval);
             this.interval = null;
         }
+        if (this.autoRestartTimer) {
+            clearTimeout(this.autoRestartTimer);
+            this.autoRestartTimer = null;
+        }
         this.isRunning = false;
         this.isPaused = false;
+        this.forcePaused = false;
         this.closeCurrentPopup();
         console.log('기도 팝업 순회 중지');
     }
@@ -72,6 +80,64 @@ class PrayerPopupManager {
             this.isPaused = false;
             console.log('기도 팝업 재개');
         }
+    }
+
+    // 강제 일시정지 (다른 UI 요소가 활성화될 때)
+    forcePause() {
+        this.pause();
+        this.forcePaused = true;
+        // 자동 재시작 타이머 정리
+        if (this.autoRestartTimer) {
+            clearTimeout(this.autoRestartTimer);
+            this.autoRestartTimer = null;
+        }
+        console.log('기도 팝업 강제 일시정지');
+    }
+
+    // 강제 일시정지 해제
+    forceResume() {
+        if (this.forcePaused) {
+            this.forcePaused = false;
+            this.resume();
+            console.log('기도 팝업 강제 일시정지 해제');
+        }
+    }
+
+    // 수동으로 팝업 닫기 (3초 후 자동 재시작)
+    manualClose() {
+        this.closeCurrentPopup();
+        
+        // 자동 재시작 타이머 설정
+        if (this.autoRestartTimer) {
+            clearTimeout(this.autoRestartTimer);
+        }
+        
+        this.autoRestartTimer = setTimeout(() => {
+            if (this.isRunning && !this.forcePaused) {
+                console.log('기도 팝업 자동 재시작');
+                this.showNextPrayerPopup();
+                
+                // 인터벌 재설정
+                if (this.interval) {
+                    clearInterval(this.interval);
+                }
+                this.interval = setInterval(() => {
+                    this.showNextPrayerPopup();
+                }, this.animationDuration);
+            }
+            this.autoRestartTimer = null;
+        }, this.autoRestartDelay);
+    }
+
+    // 현재 상태 확인
+    getStatus() {
+        return {
+            isRunning: this.isRunning,
+            isPaused: this.isPaused,
+            forcePaused: this.forcePaused || false,
+            currentIndex: this.currentIndex,
+            totalMissionaries: this.missionaries.length
+        };
     }
 
     // 다음 기도 팝업 표시
@@ -171,7 +237,7 @@ class PrayerPopupManager {
         let prayer = this.getMissionaryPrayerTopic(name);
         
         wrapper.innerHTML = `
-            <div class="popup-close-btn" title="기도 팝업 닫기">
+            <div class="popup-close-btn" title="기도 팝업 닫기 (3초 후 자동 재시작)">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -212,32 +278,69 @@ class PrayerPopupManager {
 
     // Firestore에서 최신 뉴스레터 요약 로드
     async loadLatestNewsletterSummary(popupElement, missionaryName) {
-        if (!window.firebase?.firestore) return;
+        // Firebase 인덱스 오류 방지를 위해 기본 기도 제목 사용
+        const prayerText = popupElement.querySelector('.popup-prayer-text');
+        if (prayerText) {
+            const defaultPrayer = this.getMissionaryPrayerTopic(missionaryName);
+            prayerText.textContent = defaultPrayer;
+        }
+        
+        // Firebase 쿼리는 나중에 인덱스가 설정된 후에 활성화
+        /*
+        if (!window.firebase?.firestore) {
+            console.log('Firestore가 초기화되지 않았습니다.');
+            return;
+        }
         
         try {
-            const snapshot = await window.firebase.firestore()
-                .collection('newsletters')
-                .where('missionaryName', '==', missionaryName)
-                .orderBy('date', 'desc')
-                .limit(1)
-                .get();
+            const firestore = window.firebase.firestore();
             
-            if (!snapshot.empty) {
-                const doc = snapshot.docs[0];
-                const data = doc.data();
-                if (data.summary && data.summary.trim() !== '') {
-                    const summary = data.summary.length > 80 ? 
-                        data.summary.substring(0, 80) + '...' : data.summary;
-                    
-                    const prayerText = popupElement.querySelector('.popup-prayer-text');
-                    if (prayerText) {
-                        prayerText.textContent = summary;
+            // Firestore 연결 상태 확인
+            if (!firestore) {
+                console.log('Firestore 인스턴스를 가져올 수 없습니다.');
+                return;
+            }
+            
+            // 먼저 newsletterSummaries 컬렉션에서 시도 (누구나 읽기 가능)
+            let summary = null;
+            try {
+                const summarySnapshot = await firestore
+                    .collection('newsletterSummaries')
+                    .where('missionaryName', '==', missionaryName)
+                    .orderBy('date', 'desc')
+                    .limit(1)
+                    .get();
+                
+                if (!summarySnapshot.empty) {
+                    const doc = summarySnapshot.docs[0];
+                    const data = doc.data();
+                    if (data.summary && data.summary.trim() !== '') {
+                        summary = data.summary.length > 80 ? 
+                            data.summary.substring(0, 80) + '...' : data.summary;
                     }
                 }
+            } catch (error) {
+                console.log('Firebase 인덱스가 설정되지 않았습니다. 기본 기도 제목을 사용합니다.');
             }
+            
+            // 결과 표시
+            const prayerText = popupElement.querySelector('.popup-prayer-text');
+            if (prayerText) {
+                if (summary) {
+                    prayerText.textContent = summary;
+                } else {
+                    prayerText.textContent = '현지 사역과 복음 전파를 위해 기도해 주세요.';
+                }
+            }
+            
         } catch (error) {
-            console.warn('Firestore 요약 로드 오류:', error);
+            console.log('뉴스레터 요약 로드 중 오류:', error.message);
+            const prayerText = popupElement.querySelector('.popup-prayer-text');
+            if (prayerText) {
+                prayerText.textContent = '현지 사역과 복음 전파를 위해 기도해 주세요.';
+            }
         }
+        */
     }
 
     // 이벤트 리스너 추가
@@ -257,7 +360,7 @@ class PrayerPopupManager {
             closeBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                this.closePopupWithAnimation(popupElement);
+                this.manualClose(); // 수동 닫기 (3초 후 자동 재시작)
             });
         }
         
@@ -373,12 +476,16 @@ class PrayerPopupManager {
     }
 }
 
+// 전역 인스턴스 생성
+if (!window.prayerPopupManager) {
+    window.prayerPopupManager = new PrayerPopupManager();
+}
+
 // 전역 함수들 (기존 호환성 유지)
 function startPrayerRotation() {
-    if (!window.prayerPopupManager) {
-        window.prayerPopupManager = new PrayerPopupManager();
+    if (window.prayerPopupManager) {
+        window.prayerPopupManager.startRotation();
     }
-    window.prayerPopupManager.startRotation();
 }
 
 function stopPrayerRotation() {
@@ -390,6 +497,37 @@ function stopPrayerRotation() {
 function isPrayerRotationActive() {
     return window.prayerPopupManager ? window.prayerPopupManager.isActive() : false;
 }
+
+// 편의 함수들
+window.pausePrayerRotation = () => {
+    if (window.prayerPopupManager) {
+        window.prayerPopupManager.forcePause();
+    }
+};
+
+window.resumePrayerRotation = () => {
+    if (window.prayerPopupManager) {
+        window.prayerPopupManager.forceResume();
+    }
+};
+
+window.getPrayerRotationStatus = () => {
+    return window.prayerPopupManager ? window.prayerPopupManager.getStatus() : null;
+};
+
+// 기도 팝업 수동 닫기 (3초 후 자동 재시작)
+window.manualClosePrayerPopup = () => {
+    if (window.prayerPopupManager) {
+        window.prayerPopupManager.manualClose();
+    }
+};
+
+// 기도 팝업 설정 업데이트
+window.updatePrayerPopupSettings = (settings) => {
+    if (window.prayerPopupManager) {
+        window.prayerPopupManager.updateSettings(settings);
+    }
+};
 
 // 모듈 내보내기
 if (typeof module !== 'undefined' && module.exports) {
