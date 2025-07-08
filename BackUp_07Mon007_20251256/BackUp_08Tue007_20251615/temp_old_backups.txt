@@ -1,0 +1,30 @@
+Get-Item : Cannot find path 'C:\Users\User\Documents\backups\$_' because it does not exist.
+At line:1 char:116
++ ...  (Get-Date) - (Get-Item 'C:\Users\User\Documents\backups\\$_').LastWr ...
++                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Users\User\Documents\backups\$_:String) [Get-Item], ItemNotFoundExceptio 
+   n
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetItemCommand
+ 
+Cannot find an overload for "op_Subtraction" and the argument count: "2".
+At line:1 char:102
++ ... re-Object { (Get-Date) - (Get-Item 'C:\Users\User\Documents\backups\\ ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:) [], MethodException
+    + FullyQualifiedErrorId : MethodCountCouldNotFindBest
+ 
+Get-Item : Cannot find path 'C:\Users\User\Documents\backups\$_' because it does not exist.
+At line:1 char:116
++ ...  (Get-Date) - (Get-Item 'C:\Users\User\Documents\backups\\$_').LastWr ...
++                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\Users\User\Documents\backups\$_:String) [Get-Item], ItemNotFoundExceptio 
+   n
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetItemCommand
+ 
+Cannot find an overload for "op_Subtraction" and the argument count: "2".
+At line:1 char:102
++ ... re-Object { (Get-Date) - (Get-Item 'C:\Users\User\Documents\backups\\ ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:) [], MethodException
+    + FullyQualifiedErrorId : MethodCountCouldNotFindBest
+ 

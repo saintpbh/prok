@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>선교사 정보 입력</title>
+  <link rel="stylesheet" href="css/common/base.css">
+  <link rel="stylesheet" href="css/common/navigation.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="css/missionary-input.css">
+  <link rel="stylesheet" href="css/missionary-input/base.css">
+  <link rel="stylesheet" href="css/missionary-input/forms.css">
+  <link rel="stylesheet" href="css/missionary-input/tabs.css">
+  <link rel="stylesheet" href="css/missionary-input/family.css">
+  <link rel="stylesheet" href="css/missionary-input/buttons.css">
+  <link rel="stylesheet" href="css/missionary-input/states.css">
+  <link rel="stylesheet" href="css/missionary-input/responsive.css">
+  <style>
+    body { display: none; }
+  </style>
+</head>
+<body data-page="missionary-input">
+  <div id="nav-container"></div>
+
+  <main class="admin-main">
+    <div class="content-wrapper">
+      <div class="page-header">
+        <h1>👤 선교사 입력</h1>
+        <div class="page-info">
+          <h2>새로운 선교사 등록</h2>
+        </div>
+
+      </div>
+      
+      <div class="form-container">
+        <div id="missionaryFormContainer" class="missionary-form-container">
+          <!-- 동적 폼이 여기에 렌더링됩니다 -->
+        </div>
+      </div>
+    </div>
+  </main>
+  
+      <!-- Firebase SDK (CDN) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-functions.js"></script>
+
+    <!-- Firebase Config -->
+    <script src="js/firebase-config.js"></script>
+    
+    <!-- Common Navigation -->
+    <script src="js/common/navigation.js"></script>
+
+  <!-- Page Protection & Auth -->
+  <script src="js/auth.js"></script>
+
+  <!-- UI/Form Modules -->
+  <script src="js/firebaseService.js"></script>
+  <script src="js/ui/formUtils.js"></script>
+  <script src="js/ui/familyManager.js"></script>
+  <script src="js/ui/supporterManager.js"></script>
+  <script src="js/ui/dynamicFormRenderer.js"></script>
+  <script src="js/ui/missionaryFormManager.js"></script>
+  <script src="js/missionaryInputPage.js"></script>
+
+  <!-- Nav Loader & Event Listeners -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('nav.html')
+        .then(response => response.text())
+        .then(data => {
+          document.getElementById('nav-container').innerHTML = data;
+          
+          const logoutButton = document.getElementById('logout-button');
+          if(logoutButton) {
+            logoutButton.addEventListener('click', () => firebase.auth().signOut());
+          }
+
+          const userEmailSpan = document.getElementById('user-email');
+          firebase.auth().onAuthStateChanged(user => {
+            if(user && userEmailSpan) {
+              userEmailSpan.textContent = user.email;
+            }
+          });
+        });
+    });
+  </script>
+</body>
+</html> 

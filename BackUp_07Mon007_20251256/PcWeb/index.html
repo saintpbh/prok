@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ko" class="sl-theme-light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>한국기독교장로회 선교사 파송지도</title>
+    <link rel="icon" type="image/svg+xml" href="logo.svg">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
+    <!-- 모듈화된 CSS 시스템 -->
+    <link rel="stylesheet" href="css/main.css?v=1.0.1">
+    <!-- 기존 스타일시트 (점진적으로 제거 예정) -->
+    <link rel="stylesheet" href="css/styles.css?v=1.0.1">
+    <!-- 모던 팝업 등 신규 디자인을 위한 스타일시트 -->
+    <link rel="stylesheet" href="css/modern.css?v=1.0.1">
+    <link rel="stylesheet" href="css/sidebar.css?v=1.1.2" />
+    <link rel="stylesheet" href="css/table.css?v=1.0.1" />
+    <link rel="stylesheet" href="css/popup.css?v=1.0.3" />
+    <link rel="stylesheet" href="css/modern.css?v=1.2.3" />
+    <link rel="stylesheet" href="css/minimal-prayer-popup.css">
+    <link rel="stylesheet" href="css/country-missionary-popup.css">
+    <!-- 새로운 기도 팝업 모듈 v2.0 -->
+    <link rel="stylesheet" href="css/prayerPopup.css">
+    <!-- 독립적인 국가별 선교사 리스트 디자인 -->
+    <link rel="stylesheet" href="css/country-missionary-list.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.0/cdn/shoelace.js"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Pretendard:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="map"></div>
+    <div id="titleLogo" class="title-flip-container">
+        <div class="title-flip-inner">
+            <div class="title-front">
+                <img src="logo.svg" alt="로고" style="height: 1.5em; vertical-align: middle; margin-right: 8px;">
+                한국기독교장로회 선교사 파송지도
+            </div>
+            <div class="title-back">
+                <div class="search-container">
+                    <div class="search-input-wrapper">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="missionary-search" placeholder="선교사 이름, 국가, 기관을 검색하세요..." autocomplete="off">
+                        <button type="button" class="search-clear" id="search-clear">✕</button>
+                    </div>
+                    <button type="button" class="search-close-btn" id="search-close-btn">검색 끄기</button>
+                    <div id="search-results" class="search-results-dropdown"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 기도 안내 팝업 -->
+    <div id="prayer-notification" class="prayer-notification hidden">
+        <div class="prayer-notification-content">
+            <span class="prayer-icon">🙏</span>
+            <span class="prayer-message"></span>
+        </div>
+    </div>
+    
+    <div id="mapGuide">
+이 지도는 전세계에 흩어져 선교사역을 감당하고 있는 총회파송 해외선교동역자님들의 현황을 시각적으로 보여줍니다.<br>귀한 선교사역을 위해 기도로 함께 하여 주시기를 부탁드립니다.
+    </div>
+    <div id="prayer-count-info" class="prayer-count-info"></div>
+    <div id="missionary-table-country" class="country-table-overlay"></div>
+    <div id="missionary-table-presbytery" class="presbytery-table-overlay"></div>
+    <div id="ui-controls">
+        <button id="fullscreenBtn" class="square-button">[  ]</button>
+        <button id="exitFullscreenBtn" class="square-button hidden">[  ]</button>
+        <button id="testDetailBtn" class="square-button" style="background: #28a745; color: white; margin-left: 10px;" title="선교사 상세 정보 테스트">🧪</button>
+    </div>
+    <div id="detailPopupContainer"></div>
+    <!-- 모던 상세보기 팝업은 DOM의 마지막으로 이동시켰습니다. -->
+    
+    <sl-button id="country-exit-btn" variant="danger" size="large" pill>
+        <sl-icon slot="prefix" name="arrow-left"></sl-icon>
+        자세히 보기 종료
+    </sl-button>
+    <sl-button id="presbytery-exit-btn" variant="danger" size="large" pill>
+        <sl-icon slot="prefix" name="arrow-left"></sl-icon>
+        자세히 보기 종료
+    </sl-button>
+    
+    <!-- 사이드바 패널 -->내내
+    <div id="sidebar-panel" class="sidebar-panel">
+        <div class="sidebar-header">
+            <h3 id="sidebar-title">선교사 목록</h3>
+            <sl-icon-button name="x-lg" label="닫기" class="sidebar-close"></sl-icon-button>
+        </div>
+        <div class="sidebar-content">
+            <div class="sidebar-search">
+                <sl-input placeholder="선교사 이름 검색..." clearable>
+                    <sl-icon slot="prefix" name="search"></sl-icon>
+                </sl-input>
+            </div>
+            <div id="sidebar-list" class="sidebar-list">
+                <!-- 선교사 리스트가 여기에 동적으로 추가됩니다 --
+            </div>
+        </div>
+    </div>
+    
+    <!-- 사이드바 오버레이 -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+    <!-- 모던 상세보기 팝업: 모든 UI 요소들 중 최상위에 위치하도록 DOM의 마지막으로 이동 -->
+    <div id="detailPopup"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <!-- Leaflet 라이브러리 -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="js/firebase-config.js"></script>
+    
+    <!-- 기타 라이브러리 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    
+    <!-- 기본 유틸리티 스크립트 -->
+    <script src="js/utils.js"></script>
+    <script src="js/newsletterPopup.js"></script>
+    
+    <!-- 스크립트 로딩 -->
+    <script src="js/setup.js?v=1.0.1"></script>
+    <script src="js/dataManager.js?v=1.0.1"></script>
+    <script src="js/uiManager.js?v=1.0.1"></script>
+    <script src="js/prayercount.js?v=1.0.1"></script>
+    <script src="js/missionaryMap.js?v=1.0.1"></script>
+    <script src="js/globalSearch.js?v=1.0.1"></script>
+    <script src="js/ui/detailPopup.js?v=1.0.1"></script>
+    <script src="js/ui/floatingMissionary.js?v=1.0.1"></script>
+    <script src="js/ui/floatingPopups.js?v=1.0.1"></script>
+    <!-- 새로운 기도 팝업 모듈 v2.0 -->
+    <script src="js/ui/prayerPopup.js"></script>
+    <script src="js/ui/prayerPopupAdapter.js"></script>
+    <script src="js/prayerclick.js?v=1.0.0"></script>
+    <!-- 독립적인 국가별 선교사 리스트 관리 -->
+    <script src="js/ui/CountryMissionaryList.js"></script>
+    
+    <script src="js/news.js?v=1.0.1"></script>
+    <script src="js/accessibility.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="js/ui/MobileMissionarySwiper.js?v=1.0.0"></script>
+    
+    <!-- 테스트 스크립트 -->
+    <script>
+        // 선교사 상세 정보 테스트
+        document.getElementById('testDetailBtn').addEventListener('click', async function() {
+            const testName = prompt('테스트할 선교사 이름을 입력하세요:');
+            if (!testName) return;
+            
+            try {
+                // detailPopup.js의 fetchMissionaryDetails 함수 사용
+                const info = await fetchMissionaryDetails(testName);
+                
+                if (!info) {
+                    alert('선교사 정보를 찾을 수 없습니다.');
+                    return;
+                }
+                
+                let result = '✅ 선교사 상세 정보 테스트 성공\n\n';
+                result += `👤 이름: ${info.name || '정보 없음'}\n`;
+                result += `🌍 선교지: ${info.country || '정보 없음'}\n`;
+                result += `🏙️ 도시: ${info.city || '정보 없음'}\n`;
+                result += `📅 파송년도: ${info.sent_date || '정보 없음'}\n`;
+                result += `🏢 소속기관: ${info.organization || '정보 없음'}\n`;
+                result += `⛪ 노회: ${info.presbytery || '정보 없음'}\n`;
+                result += `🙏 기도제목: ${info.prayer || '정보 없음'}\n`;
+                result += `📝 요약: ${info.summary || '정보 없음'}\n`;
+                
+                if (info.prayerRequests && info.prayerRequests.length > 0) {
+                    result += `\n📝 기도 요청: ${info.prayerRequests.length}개`;
+                }
+                
+                if (info.latestNewsletter) {
+                    result += `\n📰 뉴스레터: 있음`;
+                }
+                
+                alert(result);
+                
+            } catch (error) {
+                alert(`오류: ${error.message}`);
+            }
+        });
+
+        // 기도 팝업 상태 확인 버튼 추가
+        const statusBtn = document.createElement('button');
+        statusBtn.id = 'prayerStatusBtn';
+        statusBtn.className = 'square-button';
+        statusBtn.style.background = '#17a2b8; color: white; margin-left: 10px;';
+        statusBtn.title = '기도 팝업 상태 확인';
+        statusBtn.textContent = '📊';
+        statusBtn.addEventListener('click', function() {
+            const status = window.getPrayerRotationStatus();
+            if (status) {
+                alert(`기도 팝업 상태:\n\n` +
+                      `🔄 실행 중: ${status.isRunning ? '예' : '아니오'}\n` +
+                      `⏸️ 일시정지: ${status.isPaused ? '예' : '아니오'}\n` +
+                      `🔒 강제 일시정지: ${status.forcePaused ? '예' : '아니오'}\n` +
+                      `📍 현재 인덱스: ${status.currentIndex}\n` +
+                      `👥 총 선교사 수: ${status.totalMissionaries}\n\n` +
+                      `📊 UI 상태:\n` +
+                      `🌍 국가별/노회별 모드: ${status.isInDetailMode ? '예' : '아니오'}\n` +
+                      `📋 국가별 선교사 리스트: ${status.isCountryListVisible ? '표시 중' : '숨김'}\n` +
+                      `✅ 자동 재시작 가능: ${status.canAutoRestart ? '예' : '아니오'}`);
+            } else {
+                alert('기도 팝업 매니저를 찾을 수 없습니다.');
+            }
+        });
+        document.getElementById('ui-controls').appendChild(statusBtn);
+    </script>
+</body>
+</html> 

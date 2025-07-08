@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missionaries to MissionaryProfiles 복사 스크립트</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #007bff;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .log-success { color: #28a745; }
+        .log-error { color: #dc3545; }
+        .log-info { color: #17a2b8; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Missionaries → MissionaryProfiles 복사 스크립트</h1>
+        
+        <div id="status" class="status info">
+            스크립트가 준비되었습니다. 시작 버튼을 클릭하세요.
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalCount">-</div>
+                <div class="stat-label">총 선교사 수</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="copiedCount">-</div>
+                <div class="stat-label">복사 완료</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="errorCount">-</div>
+                <div class="stat-label">오류 발생</div>
+            </div>
+        </div>
+        
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <div style="text-align: center; margin: 20px 0;">
+            <button id="startBtn" onclick="startCopy()">복사 시작</button>
+            <button id="stopBtn" onclick="stopCopy()" disabled>중지</button>
+            <button onclick="clearLog()">로그 지우기</button>
+        </div>
+        
+        <div class="log" id="log"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+
+    <script>
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyCrJIhyTYQ4bTUW4jarFqluD97xKao2kF0",
+            authDomain: "prokworldmap.firebaseapp.com",
+            databaseURL: "https://prokworldmap-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "prokworldmap",
+            storageBucket: "prokworldmap.appspot.com",
+            messagingSenderId: "728381830842",
+            appId: "1:728381830842:web:ea9541db40f3710891f483",
+            measurementId: "G-0MK0N145WP"
+        };
+
+        // Firebase 초기화
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const db = firebase.firestore();
+        let isRunning = false;
+        let totalCount = 0;
+        let copiedCount = 0;
+        let errorCount = 0;
+
+        // 로그 함수
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // 상태 업데이트 함수
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        // 통계 업데이트 함수
+        function updateStats() {
+            document.getElementById('totalCount').textContent = totalCount;
+            document.getElementById('copiedCount').textContent = copiedCount;
+            document.getElementById('errorCount').textContent = errorCount;
+            
+            const progress = totalCount > 0 ? (copiedCount / totalCount) * 100 : 0;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        }
+
+        // 로그 지우기
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        // 복사 중지
+        function stopCopy() {
+            isRunning = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            updateStatus('복사가 중지되었습니다.', 'warning');
+            addLog('복사 작업이 중지되었습니다.', 'info');
+        }
+
+        // missionaries 데이터를 missionaryProfiles로 복사
+        async function startCopy() {
+            if (isRunning) return;
+            
+            isRunning = true;
+            copiedCount = 0;
+            errorCount = 0;
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            
+            updateStatus('데이터 복사를 시작합니다...', 'info');
+            addLog('복사 작업을 시작합니다...', 'info');
+            
+            try {
+                // missionaries 컬렉션에서 데이터 가져오기
+                addLog('missionaries 컬렉션에서 데이터를 가져오는 중...', 'info');
+                const missionariesSnapshot = await db.collection('missionaries').get();
+                
+                totalCount = missionariesSnapshot.size;
+                updateStats();
+                
+                if (totalCount === 0) {
+                    updateStatus('복사할 missionaries 데이터가 없습니다.', 'warning');
+                    addLog('missionaries 컬렉션에 데이터가 없습니다.', 'warning');
+                    stopCopy();
+                    return;
+                }
+                
+                addLog(`총 ${totalCount}명의 선교사 데이터를 찾았습니다.`, 'info');
+                
+                // 각 선교사 데이터를 missionaryProfiles로 복사
+                for (const doc of missionariesSnapshot.docs) {
+                    if (!isRunning) break;
+                    
+                    try {
+                        const missionaryData = doc.data();
+                        
+                        // missionaryProfiles에 저장할 데이터 구조
+                        const profileData = {
+                            name: missionaryData.name || '',
+                            country: missionaryData.country || '',
+                            city: missionaryData.city || '',
+                            sent_date: missionaryData.sent_date || missionaryData.sentDate || '',
+                            organization: missionaryData.organization || missionaryData.organization_name || '',
+                            presbytery: missionaryData.presbytery || '',
+                            prayer: missionaryData.prayer || missionaryData.prayerTitle || '',
+                            summary: missionaryData.summary || missionaryData.latestNewsletterSummary || '',
+                            image: missionaryData.image || missionaryData.profileImage || null,
+                            // 메타데이터
+                            originalId: doc.id,
+                            copiedAt: new Date(),
+                            source: 'missionaries'
+                        };
+                        
+                        // 필수 필드가 있는지 확인
+                        if (!profileData.name) {
+                            addLog(`선교사 ID ${doc.id}: 이름이 없어 건너뜁니다.`, 'warning');
+                            continue;
+                        }
+                        
+                        // missionaryProfiles에 저장
+                        await db.collection('missionaryProfiles').doc(doc.id).set(profileData);
+                        
+                        copiedCount++;
+                        updateStats();
+                        
+                        addLog(`✅ ${profileData.name} (${profileData.country}) 복사 완료`, 'success');
+                        
+                        // 진행 상황 업데이트
+                        if (copiedCount % 10 === 0) {
+                            updateStatus(`${copiedCount}/${totalCount} 복사 완료...`, 'info');
+                        }
+                        
+                    } catch (error) {
+                        errorCount++;
+                        updateStats();
+                        addLog(`❌ 선교사 ID ${doc.id} 복사 실패: ${error.message}`, 'error');
+                    }
+                }
+                
+                if (isRunning) {
+                    updateStatus(`복사 완료! ${copiedCount}명 성공, ${errorCount}명 실패`, 'success');
+                    addLog(`복사 작업이 완료되었습니다. 성공: ${copiedCount}, 실패: ${errorCount}`, 'success');
+                }
+                
+            } catch (error) {
+                updateStatus(`복사 중 오류 발생: ${error.message}`, 'error');
+                addLog(`복사 작업 실패: ${error.message}`, 'error');
+            }
+            
+            stopCopy();
+        }
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            addLog('스크립트가 로드되었습니다.', 'info');
+            addLog('Firebase 연결을 확인하는 중...', 'info');
+            
+            // Firebase 연결 확인
+            db.collection('missionaries').limit(1).get()
+                .then(() => {
+                    addLog('Firebase 연결 성공', 'success');
+                    updateStatus('Firebase 연결 성공. 복사를 시작할 수 있습니다.', 'success');
+                })
+                .catch(error => {
+                    addLog(`Firebase 연결 실패: ${error.message}`, 'error');
+                    updateStatus('Firebase 연결 실패', 'error');
+                });
+        });
+    </script>
+</body>
+</html> 

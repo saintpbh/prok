@@ -1,0 +1,29 @@
+/* 선교사 입력 페이지 스타일 - 모듈화 완료
+
+이 파일의 모든 스타일은 아래 파일로 분리되었습니다:
+- base.css
+- forms.css
+- tabs.css
+- family.css
+- buttons.css
+- states.css
+- responsive.css
+
+각 파일을 개별적으로 import 하세요. */
+
+.temp-modal {
+  position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
+  background: rgba(30,32,40,0.32); z-index: 999; display: flex; align-items: center; justify-content: center;
+}
+.temp-modal-box {
+  background: #fff; border-radius: 18px; box-shadow: 0 8px 32px #0003;
+  padding: 38px 32px 28px 32px; min-width: 320px; max-width: 90vw; text-align: center;
+}
+.temp-modal-msg {
+  font-size: 1.18em; margin-bottom: 28px; line-height: 1.6;
+}
+.temp-modal-btn {
+  width: 100%; margin-bottom: 10px; font-size: 1.08em; padding: 12px 0;
+  border-radius: 8px;
+}
+.temp-modal-btn:last-child { margin-bottom: 0; } 
